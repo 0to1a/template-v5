@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "project/internal/gen/auth/v1;authv1";
+
+// AuthService issues one-time login codes and exchanges verified codes for a
+// bearer JWT. There is no self-registration: RequestLogin and SubmitLogin
+// only ever operate on existing active users.
+//
+// Naming is fixed by docs/prds/001-initial-auth.md: RequestLogin/SubmitLogin.
+// Do not introduce RequestOTP/VerifyOTP/VerifyLogin variants anywhere.
+service AuthService {
+  // RequestLogin always returns a generic response, whether or not the email
+  // belongs to an active user, to prevent account enumeration. It never
+  // creates a user.
+  rpc RequestLogin(RequestLoginRequest) returns (RequestLoginResponse);
+
+  // SubmitLogin checks the one-time code and, on success, issues an HS256
+  // JWT. Unknown users or invalid codes return a generic Unauthenticated
+  // error.
+  rpc SubmitLogin(SubmitLoginRequest) returns (SubmitLoginResponse);
+}
+
+message RequestLoginRequest {
+  string email = 1;
+}
+
+message RequestLoginResponse {}
+
+message SubmitLoginRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message SubmitLoginResponse {
+  string access_token = 1;
+}
