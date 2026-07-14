@@ -16,6 +16,7 @@ import (
 	"project/internal/gen/auth/v1/authv1connect"
 	"project/internal/gen/db"
 	"project/internal/health"
+	"project/internal/mail"
 	"project/internal/platform/config"
 	"project/internal/platform/database"
 )
@@ -58,9 +59,21 @@ func run() error {
 		return err
 	}
 
+	// MAIL_URL is optional. Unset means login codes are discarded, same as
+	// before this feature existed; a malformed non-empty value aborts
+	// startup rather than failing silently on the first login request.
+	mailSender, err := mail.NewSMTPSenderFromURL(cfg.MailURL)
+	if err != nil {
+		return err
+	}
+	var loginCodeSender auth.LoginCodeSender = auth.NoopLoginCodeSender{}
+	if mailSender != nil {
+		loginCodeSender = auth.NewEmailLoginCodeSender(mailSender)
+	}
+
 	authHandler := auth.NewHandler(auth.NewService(
 		auth.NewRepository(queries),
-		auth.NoopLoginCodeSender{},
+		loginCodeSender,
 		jwtManager,
 	))
 

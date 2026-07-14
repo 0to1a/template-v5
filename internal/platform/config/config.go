@@ -13,6 +13,7 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 	JWTSecret   string
+	MailURL     string
 }
 
 // Load reads configuration from the environment, optionally populated by a
@@ -40,9 +41,14 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("config: DATABASE_URL must be set")
 	}
 
+	// Optional: when unset, login codes are not emailed (see
+	// auth.NoopLoginCodeSender). Format parsed and validated in internal/mail.
+	mailURL := os.Getenv("MAIL_URL")
+
 	return &Config{
 		Port:        port,
 		DatabaseURL: databaseURL,
 		JWTSecret:   jwtSecret,
+		MailURL:     mailURL,
 	}, nil
 }
