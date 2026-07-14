@@ -8,7 +8,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 // generically (regex key), so a new service never needs to be registered
 // here — there must never be a per-service list to maintain.
 const backendTarget = 'http://localhost:8080';
-const connectPathPattern = '^/(?:[a-z][a-z0-9_]*\\.)+v\\d+\\.[A-Za-z0-9]+Service/';
+const connectPathPattern = String.raw`^/(?:[a-z][a-z0-9_]*\.)+v\d+\.[A-Za-z0-9]+Service/`;
 
 export default defineConfig({
 	plugins: [
