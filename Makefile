@@ -89,6 +89,7 @@ check: _check-tools gen ## Done-signal: codegen, lint, tests, both builds (insta
 	cd web && bun run test:unit -- --run --passWithNoTests
 	@echo "==> web production build"
 	cd web && bun run build
+	@touch web/dist/.gitkeep
 	@echo "==> go build"
 	go build $(GO_PKGS)
 	@echo "==> make check passed"
@@ -96,12 +97,14 @@ check: _check-tools gen ## Done-signal: codegen, lint, tests, both builds (insta
 run: _check-tools gen ## Build the frontend once, then run the single Go process
 	@echo "==> building web frontend"
 	cd web && bun run build
+	@touch web/dist/.gitkeep
 	@echo "==> running server on $${PORT:-8080}"
 	go run ./cmd/server
 
 build: _check-tools gen ## Produce the single production artifact: bin/server
 	@echo "==> web production build"
 	cd web && bun run build
+	@touch web/dist/.gitkeep
 	@echo "==> building bin/server"
 	mkdir -p bin
 	go build -o bin/server ./cmd/server
