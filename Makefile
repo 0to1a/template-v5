@@ -59,17 +59,23 @@ bootstrap: _check-tools ## Install/download all dependencies (the only target th
 	cd web && bun install --frozen-lockfile
 	@echo "==> bootstrap done"
 
+# buf and sqlc default to the go.mod-pinned tools, compiled on demand by the
+# Go toolchain. CI overrides these with prebuilt binaries of the same versions
+# because compiling buf and sqlc from source costs minutes on a cold cache.
+BUF ?= go tool buf
+SQLC ?= go tool sqlc
+
 # bun install must have run before gen: buf.gen.yaml's TS plugin is
 # web/node_modules/.bin/protoc-gen-es, which only exists once web deps are
 # installed. Run `make bootstrap` first on a fresh clone.
 gen: ## Regenerate code from proto and SQL (buf + sqlc)
 	@echo "==> generating code (buf, sqlc)"
-	go tool buf generate
-	go tool sqlc generate
+	$(BUF) generate
+	$(SQLC) generate
 
 check: _check-tools gen ## Done-signal: codegen, lint, tests, both builds (installs nothing)
 	@echo "==> buf lint"
-	go tool buf lint
+	$(BUF) lint
 	@echo "==> gofmt"
 	@unformatted="$$(gofmt -l $(GOFMT_PATHS))"; \
 	if [ -n "$$unformatted" ]; then \
