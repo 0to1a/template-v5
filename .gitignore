@@ -1,0 +1,24 @@
+# Environment
+.env
+
+# Go
+/bin/
+/tmp/
+internal/gen/
+
+# Generated frontend / Buf output
+web/src/lib/gen/
+web/dist/*
+!web/dist/.gitkeep
+
+# Frontend tooling
+web/node_modules/
+web/.svelte-kit/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# osgrep local index
+.osgrep/
