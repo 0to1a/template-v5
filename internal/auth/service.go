@@ -14,7 +14,7 @@ var errUnauthenticated = errors.New("auth: invalid credentials")
 // issue JWTs.
 type Service struct {
 	repo       Repository
-	delivery   OTPDelivery
+	delivery   LoginCodeSender
 	jwtManager *JWTManager
 	now        func() time.Time
 }
@@ -23,7 +23,7 @@ type Service struct {
 // derived from jwtManager's own signing secret, so there is exactly one
 // source of truth for it. Time flows through an injected clock (overridden
 // in tests) so OTP behavior is deterministic without sleeping.
-func NewService(repo Repository, delivery OTPDelivery, jwtManager *JWTManager) *Service {
+func NewService(repo Repository, delivery LoginCodeSender, jwtManager *JWTManager) *Service {
 	return &Service{
 		repo:       repo,
 		delivery:   delivery,

@@ -60,7 +60,7 @@ func run() error {
 
 	authHandler := auth.NewHandler(auth.NewService(
 		auth.NewRepository(queries),
-		auth.NoopOTPDelivery{},
+		auth.NoopLoginCodeSender{},
 		jwtManager,
 	))
 
