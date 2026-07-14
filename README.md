@@ -1,10 +1,10 @@
 # Template v5
 
-AI-first full-stack template: **Go 1.26 + Connect RPC + PostgreSQL** backend,
-**Svelte 5 (SvelteKit SPA)** frontend, one production binary, and a
-**PRD-driven workflow** — every behavior change starts as a small PRD in
-`docs/prds/` (see `docs/prds/README.md`). Working rules live in `AGENTS.md`; the full
-design rationale in `docs/final.md`.
+An AI-first full-stack template with a **Go 1.26, Connect RPC, and PostgreSQL**
+backend; a **Svelte 5 and SvelteKit SPA** frontend; and a single production
+binary. Development follows a **PRD-driven workflow**: every behavior change
+starts with a small PRD in [`docs/prds/`](docs/prds/README.md), and repository
+working rules are defined in [`AGENTS.md`](AGENTS.md).
 
 ## Setup
 
@@ -21,7 +21,7 @@ make run                 # build the frontend, then run the single server proces
 binary and applied automatically at server startup (up only); the server
 never creates, drops, or resets the database itself.
 
-## Security notes (initial version)
+## Security notes
 
 - The seeded `admin@localhost` account accepts the static OTP `123456`
   (exact-match only). Remove or protect it before any untrusted deployment.
