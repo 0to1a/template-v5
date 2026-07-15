@@ -1,0 +1,10 @@
+{
+	"rpc": {
+		"/auth.v1.AuthService/RequestLogin": {}
+	},
+	"visit": "/login",
+	"fill": {
+		"input[name=email]": "person@example.com"
+	},
+	"submit": "button[type=submit]"
+}
