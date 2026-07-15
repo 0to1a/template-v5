@@ -22,3 +22,4 @@ web/.svelte-kit/
 
 # osgrep local index
 .osgrep/
+.osgrep

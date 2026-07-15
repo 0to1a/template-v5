@@ -29,6 +29,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Enter your code · Template v5</title>
+</svelte:head>
+
 <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-8">
 	<h1 class="text-2xl font-semibold">Enter your code</h1>
 	<p class="text-neutral-600">We sent a one-time code to {email}. It is valid for 5 minutes.</p>

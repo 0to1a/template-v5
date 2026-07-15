@@ -26,6 +26,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sign in · Template v5</title>
+</svelte:head>
+
 <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-8">
 	<h1 class="text-2xl font-semibold">Sign in</h1>
 	<p class="text-neutral-600">Enter your email and we will send you a one-time code.</p>

@@ -7,6 +7,10 @@
 	const authed = isAuthenticated();
 </script>
 
+<svelte:head>
+	<title>Template v5</title>
+</svelte:head>
+
 <main class="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 p-8">
 	<h1 class="text-2xl font-semibold">Template v5</h1>
 
