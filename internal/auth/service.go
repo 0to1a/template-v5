@@ -13,36 +13,45 @@ var errUnauthenticated = errors.New("auth: invalid credentials")
 // Service implements the login vertical slice: request login, submit login,
 // issue JWTs.
 type Service struct {
-	repo       Repository
-	delivery   LoginCodeSender
-	jwtManager *JWTManager
-	now        func() time.Time
+	repo                Repository
+	delivery            LoginCodeSender
+	jwtManager          *JWTManager
+	now                 func() time.Time
+	isGuestRegistration bool
 }
 
 // NewService wires the auth vertical slice. The per-user TOTP secret is
 // derived from jwtManager's own signing secret, so there is exactly one
 // source of truth for it. Time flows through an injected clock (overridden
-// in tests) so OTP behavior is deterministic without sleeping.
-func NewService(repo Repository, delivery LoginCodeSender, jwtManager *JWTManager) *Service {
+// in tests) so OTP behavior is deterministic without sleeping. When
+// isGuestRegistration is true, RequestLogin auto-creates an active user for
+// an email that doesn't have one yet, instead of silently doing nothing.
+func NewService(repo Repository, delivery LoginCodeSender, jwtManager *JWTManager, isGuestRegistration bool) *Service {
 	return &Service{
-		repo:       repo,
-		delivery:   delivery,
-		jwtManager: jwtManager,
-		now:        time.Now,
+		repo:                repo,
+		delivery:            delivery,
+		jwtManager:          jwtManager,
+		now:                 time.Now,
+		isGuestRegistration: isGuestRegistration,
 	}
 }
 
-// RequestLogin delivers a login code to an active user, if one exists. It
-// never creates a user and never reveals, via its return value, whether the
-// account exists.
+// RequestLogin delivers a login code to an active user. If none exists and
+// guest registration is enabled, one is created first. Either way, the
+// return value never reveals whether the account already existed.
 func (s *Service) RequestLogin(ctx context.Context, email string) error {
 	normalized := normalizeEmail(email)
 
 	user, err := s.repo.GetActiveUserByEmail(ctx, normalized)
 	if errors.Is(err, ErrUserNotFound) {
-		return nil
-	}
-	if err != nil {
+		if !s.isGuestRegistration {
+			return nil
+		}
+		user, err = s.repo.CreateUser(ctx, normalized)
+		if err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 

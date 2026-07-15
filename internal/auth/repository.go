@@ -23,6 +23,7 @@ type User struct {
 // substitute a fake without a real database.
 type Repository interface {
 	GetActiveUserByEmail(ctx context.Context, normalizedEmail string) (User, error)
+	CreateUser(ctx context.Context, normalizedEmail string) (User, error)
 }
 
 type repository struct {
@@ -39,6 +40,17 @@ func (r *repository) GetActiveUserByEmail(ctx context.Context, normalizedEmail s
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, ErrUserNotFound
 	}
+	if err != nil {
+		return User{}, err
+	}
+	return User{
+		PublicUUID: row.PublicUuid.String(),
+		Email:      row.Email,
+	}, nil
+}
+
+func (r *repository) CreateUser(ctx context.Context, normalizedEmail string) (User, error) {
+	row, err := r.queries.CreateUser(ctx, normalizedEmail)
 	if err != nil {
 		return User{}, err
 	}

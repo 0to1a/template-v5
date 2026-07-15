@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 )
@@ -19,6 +20,17 @@ func (f *fakeRepo) GetActiveUserByEmail(_ context.Context, normalizedEmail strin
 	return user, nil
 }
 
+// CreateUser mimics the database's unique-email constraint so a fake
+// service under test can't silently create a duplicate account.
+func (f *fakeRepo) CreateUser(_ context.Context, normalizedEmail string) (User, error) {
+	if _, ok := f.users[normalizedEmail]; ok {
+		return User{}, errors.New("fakeRepo: user already exists")
+	}
+	user := User{PublicUUID: "guest-" + normalizedEmail, Email: normalizedEmail}
+	f.users[normalizedEmail] = user
+	return user, nil
+}
+
 // recordingDelivery captures the codes it is asked to send.
 type recordingDelivery struct {
 	sent []string
@@ -33,6 +45,11 @@ const adminUUID = "00000000-0000-0000-0000-000000000001"
 
 func newTestService(t *testing.T, now time.Time) (*Service, *recordingDelivery) {
 	t.Helper()
+	return newTestServiceWithGuestRegistration(t, now, false)
+}
+
+func newTestServiceWithGuestRegistration(t *testing.T, now time.Time, isGuestRegistration bool) (*Service, *recordingDelivery) {
+	t.Helper()
 	jwtManager, err := NewJWTManager(jwtTestSecret)
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +62,7 @@ func newTestService(t *testing.T, now time.Time) (*Service, *recordingDelivery) 
 	}}
 	delivery := &recordingDelivery{}
 
-	service := NewService(repo, delivery, jwtManager)
+	service := NewService(repo, delivery, jwtManager, isGuestRegistration)
 	service.now = func() time.Time { return now }
 	return service, delivery
 }
@@ -129,5 +146,85 @@ func TestSubmitLogin_TOTPUser(t *testing.T) {
 	stale := generateCode([]byte(jwtTestSecret), testUUID, "user@example.com", fixedTime.Add(-totpPeriod))
 	if _, err := service.SubmitLogin(ctx, "user@example.com", stale); err != errUnauthenticated {
 		t.Fatalf("previous-step TOTP: err = %v, want errUnauthenticated", err)
+	}
+}
+
+// TC-005-1: with guest registration enabled, requesting a login for an
+// unrecognized email creates an active user and delivers a code to it.
+func TestRequestLogin_TC005_1(t *testing.T) {
+	service, delivery := newTestServiceWithGuestRegistration(t, fixedTime, true)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "new@example.com"); err != nil {
+		t.Fatalf("RequestLogin: %v", err)
+	}
+
+	if _, err := service.repo.GetActiveUserByEmail(ctx, "new@example.com"); err != nil {
+		t.Fatalf("expected a user to now exist for new@example.com: %v", err)
+	}
+	if len(delivery.sent) != 1 {
+		t.Fatalf("expected exactly one code delivered, got %d", len(delivery.sent))
+	}
+}
+
+// TC-005-2: with guest registration disabled (the default), requesting a
+// login for an unrecognized email creates no account and sends no code.
+func TestRequestLogin_TC005_2(t *testing.T) {
+	service, delivery := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "new@example.com"); err != nil {
+		t.Fatalf("RequestLogin: %v", err)
+	}
+
+	if _, err := service.repo.GetActiveUserByEmail(ctx, "new@example.com"); !errors.Is(err, ErrUserNotFound) {
+		t.Fatalf("expected no user to be created, got err = %v", err)
+	}
+	if len(delivery.sent) != 0 {
+		t.Fatalf("expected no code delivered, got %d", len(delivery.sent))
+	}
+}
+
+// TC-005-3: with guest registration enabled, requesting a login for an
+// email that already has an active user does not create a duplicate.
+func TestRequestLogin_TC005_3(t *testing.T) {
+	service, delivery := newTestServiceWithGuestRegistration(t, fixedTime, true)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "admin@localhost"); err != nil {
+		t.Fatalf("RequestLogin: %v", err)
+	}
+
+	user, err := service.repo.GetActiveUserByEmail(ctx, "admin@localhost")
+	if err != nil {
+		t.Fatalf("existing user vanished: %v", err)
+	}
+	if user.PublicUUID != adminUUID {
+		t.Fatalf("existing user was replaced: PublicUUID = %s, want %s", user.PublicUUID, adminUUID)
+	}
+	if len(delivery.sent) != 1 {
+		t.Fatalf("expected exactly one code delivered, got %d", len(delivery.sent))
+	}
+}
+
+// TC-005-4: a user auto-registered by RequestLogin can complete SubmitLogin
+// with the delivered code and receive a valid JWT.
+func TestSubmitLogin_TC005_4(t *testing.T) {
+	service, delivery := newTestServiceWithGuestRegistration(t, fixedTime, true)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "new@example.com"); err != nil {
+		t.Fatalf("RequestLogin: %v", err)
+	}
+	if len(delivery.sent) != 1 {
+		t.Fatalf("expected exactly one code delivered, got %d", len(delivery.sent))
+	}
+
+	token, err := service.SubmitLogin(ctx, "new@example.com", delivery.sent[0])
+	if err != nil {
+		t.Fatalf("SubmitLogin: %v", err)
+	}
+	if _, err := service.jwtManager.Parse(token); err != nil {
+		t.Fatalf("issued token failed validation: %v", err)
 	}
 }

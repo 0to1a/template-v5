@@ -75,6 +75,7 @@ func run() error {
 		auth.NewRepository(queries),
 		loginCodeSender,
 		jwtManager,
+		cfg.IsGuestRegistration,
 	))
 
 	// Every Connect procedure is protected by default. Only the procedures

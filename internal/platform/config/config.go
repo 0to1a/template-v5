@@ -10,10 +10,11 @@ import (
 
 // Config holds all runtime configuration for the server.
 type Config struct {
-	Port        string
-	DatabaseURL string
-	JWTSecret   string
-	MailURL     string
+	Port                string
+	DatabaseURL         string
+	JWTSecret           string
+	MailURL             string
+	IsGuestRegistration bool
 }
 
 // Load reads configuration from the environment, optionally populated by a
@@ -45,10 +46,15 @@ func Load() (*Config, error) {
 	// auth.NoopLoginCodeSender). Format parsed and validated in internal/mail.
 	mailURL := os.Getenv("MAIL_URL")
 
+	// Optional: when unset or anything other than "1", RequestLogin never
+	// creates an account (today's behavior, see internal/auth.Service).
+	isGuestRegistration := os.Getenv("IS_GUEST_REGISTRATION") == "1"
+
 	return &Config{
-		Port:        port,
-		DatabaseURL: databaseURL,
-		JWTSecret:   jwtSecret,
-		MailURL:     mailURL,
+		Port:                port,
+		DatabaseURL:         databaseURL,
+		JWTSecret:           jwtSecret,
+		MailURL:             mailURL,
+		IsGuestRegistration: isGuestRegistration,
 	}, nil
 }
