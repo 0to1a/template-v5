@@ -16,6 +16,7 @@ docs/prds/developed/<id>-<slug>.md
 - Slug: lowercase kebab-case.
 - One PRD = one verifiable capability. Split big PRDs before implementing.
 - A PRD is not a design document, implementation plan, or file list.
+- Every new PRD must include a `problem_brief` front-matter link to a brief whose `status` is `proceed`. If evidence cannot be completed before genuinely urgent work, use `problem_brief: waiver` plus `waiver_owner`, `waiver_reason`, and `waiver_expires`; the waiver does not bypass sensitive-behavior approval. See [`docs/product/README.md`](../product/README.md).
 - Test-case IDs reuse the PRD ID: `TC-007-1`, `TC-007-2`, …
 - Folder location is the lifecycle signal: `backlog/` means not yet delivered; `developed/` means implemented and validated.
 
@@ -27,6 +28,7 @@ type: Product requirement
 title: Short descriptive title
 description: One-sentence summary of the capability and user value.
 tags: [domain, capability]
+problem_brief: ../../product/<brief>.md
 ---
 
 # Title
@@ -58,7 +60,7 @@ The front matter follows the source-grounded, navigable style used by [OpenWiki]
 
 ## Quality gate — a PRD is ready when
 
-- front matter has a concrete title, a one-sentence description, and useful domain/capability tags;
+- front matter has a concrete title, a one-sentence description, useful domain/capability tags, and either a linked `proceed` problem brief or a complete, unexpired waiver;
 - Purpose is exactly one sentence naming the behavior and its user;
 - Acceptance has 2–5 criteria, each objectively verifiable;
 - Out of Scope has 1–3 entries;
@@ -72,7 +74,7 @@ If the request is ambiguous, stop after drafting the PRD and ask. Never invent b
 ## Workflow
 
 1. **Understand** — read `AGENTS.md`, this file, `make help`, the nearest sibling domain/page, and the PRD (if it exists). Not the whole repo.
-2. **Draft PRD** — choose the next ID across `backlog/` and `developed/`, create it under `backlog/`, use the required format, and surface assumptions/questions. Small, clear changes may proceed right after the PRD is written. Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval first — and approval is per-session: a PRD file existing does not prove it was approved.
+2. **Draft PRD** — confirm the linked problem brief says `proceed` (or record the complete waiver fields), choose the next ID across `backlog/` and `developed/`, create it under `backlog/`, use the required format, and surface assumptions/questions. Small, clear changes may proceed right after the PRD is written. Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval first — and approval is per-session: a PRD file existing does not prove it was approved.
 3. **Map one vertical slice** — the smallest change that satisfies the PRD: migration/query (if needed) → proto → handler/service/repository (as needed) → `make gen` → Svelte page/component (if needed) → tests from the Test Cases. Skip layers the feature doesn't need.
 4. **Implement** — translate Test Cases into automated tests early; put the `TC-<id>-n` ID in the test name or comment; stay inside Acceptance and Out of Scope.
 5. **Validate** — run targeted checks while iterating, then `make check` as the final gate. If it fails, the work is not done.
