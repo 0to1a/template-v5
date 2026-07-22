@@ -97,6 +97,7 @@ func run() error {
 	publicProcedures := map[string]bool{
 		authv1connect.AuthServiceRequestLoginProcedure: true,
 		authv1connect.AuthServiceSubmitLoginProcedure:  true,
+		authv1connect.AuthServiceLogoutProcedure:       true,
 	}
 	withAuth := connect.WithInterceptors(auth.NewInterceptor(jwtManager, publicProcedures))
 

@@ -17,9 +17,16 @@ service AuthService {
   rpc RequestLogin(RequestLoginRequest) returns (RequestLoginResponse);
 
   // SubmitLogin checks the one-time code and, on success, issues an HS256
-  // JWT. Unknown users or invalid codes return a generic Unauthenticated
-  // error.
+  // JWT as an HttpOnly session cookie (see PRD 017) rather than in the
+  // response body. Unknown users or invalid codes return a generic
+  // Unauthenticated error.
   rpc SubmitLogin(SubmitLoginRequest) returns (SubmitLoginResponse);
+
+  // Logout clears the session cookie server-side. It is public (bypasses
+  // the auth interceptor, see cmd/server/main.go's allowlist): clearing a
+  // cookie needs no identity check, and it must still succeed for a caller
+  // whose session already expired or was never valid.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
 }
 
 message RequestLoginRequest {
@@ -33,6 +40,10 @@ message SubmitLoginRequest {
   string code = 2;
 }
 
-message SubmitLoginResponse {
-  string access_token = 1;
-}
+// Empty: the session token travels only as an HttpOnly Set-Cookie header
+// (see internal/auth/cookie.go), never in the response body.
+message SubmitLoginResponse {}
+
+message LogoutRequest {}
+
+message LogoutResponse {}
