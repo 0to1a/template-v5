@@ -27,6 +27,7 @@ func setValidBaseEnv(t *testing.T) {
 	t.Setenv("PORT", "")
 	t.Setenv("MAIL_URL", "")
 	t.Setenv("IS_GUEST_REGISTRATION", "")
+	t.Setenv("APP_ENV", "")
 }
 
 // TC-019-8: table-driven coverage of Load's validation and defaulting.
@@ -95,7 +96,7 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			for _, key := range []string{"PORT", "JWT_SECRET", "DATABASE_URL", "MAIL_URL", "IS_GUEST_REGISTRATION"} {
+			for _, key := range []string{"PORT", "JWT_SECRET", "DATABASE_URL", "MAIL_URL", "IS_GUEST_REGISTRATION", "APP_ENV"} {
 				unsetEnv(t, key)
 			}
 			if tt.jwtSecret != "" {
@@ -228,5 +229,48 @@ func TestLoad_StillRejectsMissingDatabaseURL(t *testing.T) {
 
 	if _, err := Load(); err == nil {
 		t.Fatal("expected an error for a missing DATABASE_URL")
+	}
+}
+
+// TC-014-3: an unrecognized APP_ENV value fails startup, naming the variable.
+func TestLoad_RejectsUnrecognizedAppEnv_TC014_3(t *testing.T) {
+	setValidBaseEnv(t)
+	t.Setenv("APP_ENV", "staging")
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("expected an error for an unrecognized APP_ENV")
+	}
+	if !strings.Contains(err.Error(), "APP_ENV") {
+		t.Fatalf("error should name APP_ENV, got: %v", err)
+	}
+}
+
+// An unset APP_ENV defaults to production: fail closed rather than silently
+// running with development-only behavior (see PRD 014).
+func TestLoad_UnsetAppEnvDefaultsToProduction(t *testing.T) {
+	setValidBaseEnv(t)
+	t.Setenv("APP_ENV", "")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.AppEnv != AppEnvProduction {
+		t.Fatalf("AppEnv = %q, want %q", cfg.AppEnv, AppEnvProduction)
+	}
+}
+
+// APP_ENV=development is accepted and recorded verbatim.
+func TestLoad_AcceptsExplicitDevelopmentAppEnv(t *testing.T) {
+	setValidBaseEnv(t)
+	t.Setenv("APP_ENV", "development")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if cfg.AppEnv != AppEnvDevelopment {
+		t.Fatalf("AppEnv = %q, want %q", cfg.AppEnv, AppEnvDevelopment)
 	}
 }

@@ -11,12 +11,13 @@ waiver_expires: 2026-08-22
 
 # Production guardrail: disable the static demo login credential outside development
 
-## Owner approval required before implementation
-This PRD changes `internal/auth` login behavior. Per `AGENTS.md`, "Sensitive
-behavior (auth, authorization, money, deletion, destructive migration)
-requires owner approval before implementation." **Do not implement any of
-the Acceptance below until the owner explicitly approves this PRD.** See
-`docs/threat-model.md` for the risk this closes.
+## Owner approval
+This PRD changes `internal/auth` login behavior, so per `AGENTS.md` it
+required owner approval before implementation. The owner approved
+implementation via the `request_confirmation` interaction on ALV-14
+("Approve 5 sensitive auth/security PRDs before Fase 3 sensitive work is
+coded"), accepted 2026-07-22. See `docs/threat-model.md` for the risk this
+closes (now removed from the currently-accepted list).
 
 ## Purpose
 Stop the seeded `admin@localhost` / `123456` static login code

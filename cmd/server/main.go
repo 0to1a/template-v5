@@ -67,7 +67,7 @@ func run() error {
 
 	queries := db.New(pool)
 
-	jwtManager, err := auth.NewJWTManager(cfg.JWTSecret)
+	jwtManager, err := auth.NewJWTManager(cfg.JWTSecret, cfg.AppEnv == config.AppEnvDevelopment)
 	if err != nil {
 		return err
 	}

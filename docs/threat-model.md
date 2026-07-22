@@ -57,11 +57,6 @@ would close it.
   (`web/src/lib/auth.ts`): any XSS that runs in the app's origin can read
   the token. Tracked by
   [`prds/backlog/017-httponly-session-cookie-hardening.md`](prds/backlog/017-httponly-session-cookie-hardening.md).
-- **A seeded static login code for `admin@localhost`**
-  (`internal/auth/otp.go`, `db/migrations/00001_users.sql`): a fixed,
-  publicly-known credential (`123456`) that must never be reachable outside
-  local development. Tracked by
-  [`prds/backlog/014-production-guardrail-disable-demo-login-credential.md`](prds/backlog/014-production-guardrail-disable-demo-login-credential.md).
 - **TOTP replay within its 5-minute step**
   (`internal/auth/otp.go`): a valid code can be reused any number of times
   within the step it was issued for; there is no replay-tracking store.
