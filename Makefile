@@ -20,7 +20,7 @@
 -include .env
 export
 
-.PHONY: help bootstrap gen check run build _check-tools
+.PHONY: help bootstrap gen check check-go check-web run build _check-tools
 
 # Scoped explicitly to our own Go code. A bare "./..." would also crawl
 # web/node_modules, which can contain vendored .go files shipped inside npm
@@ -72,6 +72,20 @@ gen: ## Regenerate code from proto and SQL (buf + sqlc)
 	@echo "==> generating code (buf, sqlc)"
 	$(BUF) generate
 	$(SQLC) generate
+
+check-go: _check-tools gen ## Fast backend iteration gate: generation, formatting, vet, tests, build
+	@unformatted="$$(gofmt -l $(GOFMT_PATHS))"; test -z "$$unformatted" || { echo "gofmt found unformatted files:" >&2; echo "$$unformatted" >&2; exit 1; }
+	$(BUF) lint
+	go vet $(GO_PKGS)
+	go test $(GO_PKGS)
+	go build $(GO_PKGS)
+
+check-web: _check-tools gen ## Fast frontend iteration gate: lint, typecheck, unit tests, build
+	cd web && bun run lint
+	cd web && bun run check
+	cd web && bun run test:unit -- --run --passWithNoTests
+	cd web && bun run build
+	@touch web/dist/.gitkeep
 
 check: _check-tools gen ## Done-signal: codegen, lint, tests, both builds (installs nothing)
 	@echo "==> buf lint"

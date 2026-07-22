@@ -1,6 +1,7 @@
 # Working Rules
 
 - Every behavior change starts with a small PRD under `docs/prds/backlog/` (see `docs/prds/README.md`).
+- After this file, use `docs/ai/CONTEXT.md` to load only task-relevant context; do not scan the whole repository.
 - PRD drafting is a separate, unhurried step from implementation — speed optimizations apply to the coding phase only, never to shortcut requirements gathering or approval.
 - Implement only its Acceptance criteria and respect Out of Scope.
 - Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval before implementation.
@@ -15,4 +16,4 @@
 - Never create, drop, or reset PostgreSQL implicitly.
 - Do not add dependencies or broad refactors unless the PRD requires and approves them.
 - Add automated tests traceable to PRD test-case IDs (`TC-<id>-n`).
-- While iterating on code, prefer targeted `go build`/`go test` on the touched packages; run the full `make check` once, as the final gate, before declaring work complete.
+- While iterating, use `make check-go` and/or `make check-web`; run the full `make check` once, as the final gate, before declaring work complete.
