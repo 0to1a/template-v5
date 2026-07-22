@@ -1,6 +1,6 @@
 ---
 name: new-feature
-description: Start a new feature the PRD-driven way — draft docs/prds/NNN-<slug>.md, get approval when needed, implement one vertical slice, validate with make check. Use whenever the user asks to build, add, or change application behavior.
+description: Start a new feature the PRD-driven way — draft docs/prds/backlog/NNN-<slug>.md, get approval when needed, implement one vertical slice, validate with make check. Use whenever the user asks to build, add, or change application behavior.
 ---
 
 This project is PRD-driven. The full workflow, PRD format, quality gate, and
@@ -9,7 +9,7 @@ first; this skill only points there and adds no rules of its own.
 
 Then:
 
-1. Draft `docs/prds/<next-id>-<slug>.md` in the required format. Ask about
+1. Draft `docs/prds/backlog/<next-id>-<slug>.md` in the required format. Ask about
    ambiguities now, not mid-implementation. Sensitive behavior (auth,
    authorization, money, deletion, destructive migration) needs explicit
    owner approval in this session before any code.
