@@ -2,12 +2,24 @@
 # locally it passes here, and vice versa. The one divergence: buf and sqlc
 # run as prebuilt binaries (same versions as go.mod) instead of `go tool`,
 # because compiling them from source costs ~2 minutes on a cold Go cache.
+#
+# The job id below ("check") is also the required status check name enforced
+# by the main branch ruleset (see docs/runbooks/github-branch-protection.md).
+# Keep it a single job with no matrix so the reported check name stays
+# exactly "check".
 name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
