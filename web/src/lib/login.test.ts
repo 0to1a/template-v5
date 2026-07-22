@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { clearAuthenticated, isAuthenticated } from './auth';
+import { clearAccessToken, getAccessToken } from './auth';
 import {
 	completeLogin,
 	getPendingEmail,
@@ -11,15 +11,17 @@ import {
 
 describe('login flow', () => {
 	beforeEach(() => {
-		clearAuthenticated();
+		clearAccessToken();
 		setPendingEmail('');
 	});
 
-	it('TC-017-2 records authenticated state through the central auth module (no token held) and redirects home', async () => {
+	it('TC-001-5 stores the token through the central auth module and redirects home', async () => {
 		const client: SubmitLoginClient = {
 			submitLogin: async (req) => {
 				expect(req).toEqual({ email: 'admin@localhost', code: '123456' });
-				return {} as Awaited<ReturnType<SubmitLoginClient['submitLogin']>>;
+				return { accessToken: 'issued-token' } as Awaited<
+					ReturnType<SubmitLoginClient['submitLogin']>
+				>;
 			}
 		};
 		const navigatedTo: string[] = [];
@@ -30,12 +32,12 @@ describe('login flow', () => {
 		setPendingEmail('admin@localhost');
 		await completeLogin('admin@localhost', '123456', navigate, client);
 
-		expect(isAuthenticated()).toBe(true);
+		expect(getAccessToken()).toBe('issued-token');
 		expect(getPendingEmail()).toBe('');
 		expect(navigatedTo).toEqual([postLoginPath]);
 	});
 
-	it('TC-001-4 stays unauthenticated and does not navigate when the code is rejected', async () => {
+	it('TC-001-4 keeps no token and does not navigate when the code is rejected', async () => {
 		const client: SubmitLoginClient = {
 			submitLogin: async () => {
 				throw new Error('unauthenticated');
@@ -47,7 +49,7 @@ describe('login flow', () => {
 		};
 
 		await expect(completeLogin('admin@localhost', '000000', navigate, client)).rejects.toThrow();
-		expect(isAuthenticated()).toBe(false);
+		expect(getAccessToken()).toBeNull();
 		expect(navigatedTo).toEqual([]);
 	});
 });
