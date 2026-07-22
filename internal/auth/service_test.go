@@ -228,3 +228,69 @@ func TestSubmitLogin_TC005_4(t *testing.T) {
 		t.Fatalf("issued token failed validation: %v", err)
 	}
 }
+
+// TC-015-1: once loginFailureThreshold wrong attempts land for one account,
+// even the correct code is rejected — the account is locked out.
+func TestSubmitLogin_TC015_1(t *testing.T) {
+	service, _ := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	for i := 0; i < loginFailureThreshold; i++ {
+		if _, err := service.SubmitLogin(ctx, "admin@localhost", "000000"); err != errUnauthenticated {
+			t.Fatalf("failed attempt %d: err = %v, want errUnauthenticated", i, err)
+		}
+	}
+
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != errUnauthenticated {
+		t.Fatalf("locked-out account with correct code: err = %v, want errUnauthenticated", err)
+	}
+}
+
+// TC-015-2: a successful login resets the failure counter, so the account
+// is not throttled by failures that happened before it.
+func TestSubmitLogin_TC015_2(t *testing.T) {
+	service, _ := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	for i := 0; i < loginFailureThreshold-1; i++ {
+		if _, err := service.SubmitLogin(ctx, "admin@localhost", "000000"); err != errUnauthenticated {
+			t.Fatalf("failed attempt %d: err = %v, want errUnauthenticated", i, err)
+		}
+	}
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != nil {
+		t.Fatalf("correct code below threshold: %v", err)
+	}
+
+	// If the counter had not reset, these failures plus the ones above would
+	// exceed the threshold and the next correct code would be rejected.
+	for i := 0; i < loginFailureThreshold-1; i++ {
+		if _, err := service.SubmitLogin(ctx, "admin@localhost", "000000"); err != errUnauthenticated {
+			t.Fatalf("post-reset failed attempt %d: err = %v, want errUnauthenticated", i, err)
+		}
+	}
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != nil {
+		t.Fatalf("account was throttled despite the earlier reset: %v", err)
+	}
+}
+
+// TC-015-3: throttling one account never blocks another account's login.
+func TestSubmitLogin_TC015_3(t *testing.T) {
+	service, delivery := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	for i := 0; i < loginFailureThreshold; i++ {
+		if _, err := service.SubmitLogin(ctx, "admin@localhost", "000000"); err != errUnauthenticated {
+			t.Fatalf("failed attempt %d: err = %v, want errUnauthenticated", i, err)
+		}
+	}
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != errUnauthenticated {
+		t.Fatal("admin@localhost should be locked out")
+	}
+
+	if err := service.RequestLogin(ctx, "user@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.SubmitLogin(ctx, "user@example.com", delivery.sent[0]); err != nil {
+		t.Fatalf("unrelated account was throttled by admin@localhost's lockout: %v", err)
+	}
+}

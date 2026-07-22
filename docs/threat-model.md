@@ -67,11 +67,6 @@ would close it.
   within the step it was issued for; there is no replay-tracking store.
   Tracked by
   [`prds/backlog/016-otp-replay-prevention.md`](prds/backlog/016-otp-replay-prevention.md).
-- **No login throttling or lockout**
-  (`internal/auth/service.go`): `SubmitLogin` does not rate-limit or lock
-  out repeated failed attempts, so a fixed-length code space (6 digits) is
-  brute-forceable given enough attempts within one TOTP step. Tracked by
-  [`prds/backlog/015-login-throttling-and-lockout.md`](prds/backlog/015-login-throttling-and-lockout.md).
 - **SMTP-only email delivery, no provider abstraction**
   (`internal/mail`): a single hardcoded transport with no failover,
   deliverability monitoring, or provider-side abuse controls. Tracked by
