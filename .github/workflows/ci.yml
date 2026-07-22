@@ -6,7 +6,10 @@
 # The job id below ("check") is also the required status check name enforced
 # by the main branch ruleset (see docs/runbooks/github-branch-protection.md).
 # Keep it a single job with no matrix so the reported check name stays
-# exactly "check".
+# exactly "check". `make smoke-test` runs as a later step of this same job
+# (not a separate job) for the same reason: it needs docker, which
+# ubuntu-latest already provides, and a failure here must fail the one
+# required "check" status exactly like a `make check` failure does.
 name: ci
 
 on:
@@ -48,3 +51,4 @@ jobs:
 
       - run: make bootstrap
       - run: make check BUF=buf SQLC=sqlc
+      - run: make smoke-test
