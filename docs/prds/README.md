@@ -1,3 +1,13 @@
+---
+type: Product guide
+title: PRD workflow
+description: The PRD lifecycle and format every behavior change follows, from backlog draft through implementation to developed.
+tags: [prds, workflow, governance]
+status: active
+owner: Founding Engineer
+last_reviewed: 2026-07-22
+---
+
 # PRDs — the unit of work
 
 Every behavior change starts as a backlog PRD:
@@ -79,7 +89,7 @@ If the request is ambiguous, stop after drafting the PRD and ask. Never invent b
 4. **Implement** — translate Test Cases into automated tests early; put the `TC-<id>-n` ID in the test name or comment; stay inside Acceptance and Out of Scope.
 5. **Validate** — run targeted checks while iterating, then `make check` as the final gate. If it fails, the work is not done.
 6. **Promote** — only after implementation and validation succeed, `git mv` the PRD from `backlog/` to `developed/` in the same change. Do not copy it or renumber it.
-7. **Report** — PRD path, acceptance met, tests added (with TC IDs), what was deliberately not done, and real risks/follow-ups.
+7. **Report** — PRD path, acceptance met, tests added (with TC IDs), what was deliberately not done, and real risks/follow-ups. Use [`../report-template.md`](../report-template.md) as the copy-pasteable format.
 
 ## Lifecycle
 
