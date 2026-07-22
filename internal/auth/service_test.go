@@ -332,3 +332,60 @@ func TestSubmitLogin_TC015_3(t *testing.T) {
 		t.Fatalf("unrelated account was throttled by admin@localhost's lockout: %v", err)
 	}
 }
+
+// TC-016-1: a code that already completed one successful login cannot be
+// replayed for the same account within the same TOTP step.
+func TestSubmitLogin_TC016_1(t *testing.T) {
+	service, delivery := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "user@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	code := delivery.sent[0]
+
+	if _, err := service.SubmitLogin(ctx, "user@example.com", code); err != nil {
+		t.Fatalf("first use of the code was rejected: %v", err)
+	}
+	if _, err := service.SubmitLogin(ctx, "user@example.com", code); err != errUnauthenticated {
+		t.Fatalf("replayed code: err = %v, want errUnauthenticated", err)
+	}
+}
+
+// TC-016-2: an unused code still works within its validity window,
+// unchanged from before this PRD.
+func TestSubmitLogin_TC016_2(t *testing.T) {
+	service, delivery := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	if err := service.RequestLogin(ctx, "user@example.com"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := service.SubmitLogin(ctx, "user@example.com", delivery.sent[0]); err != nil {
+		t.Fatalf("unused code rejected: %v", err)
+	}
+}
+
+// TC-016-3: replay tracking for one account never blocks another account's
+// own, different code.
+func TestSubmitLogin_TC016_3(t *testing.T) {
+	service, delivery := newTestService(t, fixedTime)
+	ctx := context.Background()
+
+	// Account A (the seeded admin) completes one login, consuming its step.
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != nil {
+		t.Fatalf("admin login: %v", err)
+	}
+	if _, err := service.SubmitLogin(ctx, "admin@localhost", "123456"); err != errUnauthenticated {
+		t.Fatalf("admin replay: err = %v, want errUnauthenticated", err)
+	}
+
+	// Account B's own, different code still succeeds.
+	if err := service.RequestLogin(ctx, "user@example.com"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.SubmitLogin(ctx, "user@example.com", delivery.sent[0]); err != nil {
+		t.Fatalf("unrelated account blocked by admin's replay tracking: %v", err)
+	}
+}

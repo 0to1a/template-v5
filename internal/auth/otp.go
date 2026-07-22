@@ -69,14 +69,19 @@ func hotp(secret []byte, counter uint64) string {
 	return fmt.Sprintf("%0*d", totpDigits, binCode%mod)
 }
 
+// totpStep returns the step counter containing now, per RFC 6238. Two
+// values at the same step share the same TOTP code; this is also the unit
+// PRD 016's replay guard tracks "already used" against.
+func totpStep(now time.Time) uint64 {
+	return uint64(now.Unix()) / uint64(totpPeriod.Seconds())
+}
+
 // currentTOTP returns the code for the step containing now, per RFC 6238.
 // Skew is fixed at 0: only the current step is ever accepted, so a code is
-// valid for its whole 5-minute step and can be replayed within it. This is a
-// documented limitation, not a bug; closing it needs a replay-tracking store
-// this template does not implement.
+// valid for its whole 5-minute step unless it has already been consumed
+// once (see PRD 016's replay guard in service.go).
 func currentTOTP(secret []byte, now time.Time) string {
-	counter := uint64(now.Unix()) / uint64(totpPeriod.Seconds())
-	return hotp(secret, counter)
+	return hotp(secret, totpStep(now))
 }
 
 // generateCode returns the login code for this user at time now: the fixed
