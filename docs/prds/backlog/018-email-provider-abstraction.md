@@ -11,6 +11,18 @@ waiver_expires: 2026-08-22
 
 # Pluggable email-provider abstraction beyond SMTP
 
+## Owner decision: deferred (2026-07-22)
+Via the `ask_user_questions` interaction "Open questions for sensitive
+PRDs 015-018 (Wave C)" on ALV-14, the owner chose **"Defer — keep SMTP
+only for now"** for the provider-selection question below. No provider was
+named, so per this PRD's own gate ("do not add any dependency... until the
+owner explicitly approves this PRD and names the specific provider") and
+`AGENTS.md`'s vendor-approval boundary, none of the Acceptance criteria are
+implemented and no dependency has been added. This PRD stays in the
+backlog, unimplemented, until a future request names a provider. The
+corresponding entry in `docs/threat-model.md`'s "currently-accepted risks"
+remains — this decision does not close that risk, it accepts it for now.
+
 ## Owner approval required before implementation
 This PRD affects the delivery path for login codes, called out explicitly
 alongside the other sensitive auth items in the approved ALV-7 plan (Fase 3).
