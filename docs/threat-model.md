@@ -57,11 +57,6 @@ would close it.
   (`web/src/lib/auth.ts`): any XSS that runs in the app's origin can read
   the token. Tracked by
   [`prds/backlog/017-httponly-session-cookie-hardening.md`](prds/backlog/017-httponly-session-cookie-hardening.md).
-- **TOTP replay within its 5-minute step**
-  (`internal/auth/otp.go`): a valid code can be reused any number of times
-  within the step it was issued for; there is no replay-tracking store.
-  Tracked by
-  [`prds/backlog/016-otp-replay-prevention.md`](prds/backlog/016-otp-replay-prevention.md).
 - **SMTP-only email delivery, no provider abstraction**
   (`internal/mail`): a single hardcoded transport with no failover,
   deliverability monitoring, or provider-side abuse controls. Tracked by
