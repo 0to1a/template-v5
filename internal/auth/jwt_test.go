@@ -11,7 +11,7 @@ const jwtTestSecret = "unit-test-jwt-secret-0123456789abcdef"
 
 func newTestJWTManager(t *testing.T, now time.Time) *JWTManager {
 	t.Helper()
-	m, err := NewJWTManager(jwtTestSecret, true)
+	m, err := NewJWTManager(jwtTestSecret)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func newTestJWTManager(t *testing.T, now time.Time) *JWTManager {
 }
 
 func TestJWT_SecretTooShortRejected(t *testing.T) {
-	if _, err := NewJWTManager("short", true); err == nil {
+	if _, err := NewJWTManager("short"); err == nil {
 		t.Fatal("short JWT secret was accepted")
 	}
 }

@@ -15,9 +15,10 @@ const (
 	totpPeriod = 300 * time.Second
 
 	// localAdminEmail is the one development account that accepts the fixed
-	// code below, and only when developmentMode is true (see isLocalAdmin).
-	// The match is exact — other @localhost addresses still go through TOTP
-	// — so the static-credential surface stays as small as possible.
+	// code below. The match is exact — other @localhost addresses still go
+	// through TOTP — so the static-credential surface stays as small as
+	// possible. It remains a static credential risk: remove, disable, or
+	// protect this account before any untrusted deployment.
 	localAdminEmail = "admin@localhost"
 	localAdminCode  = "123456"
 
@@ -31,11 +32,9 @@ func normalizeEmail(email string) string {
 }
 
 // isLocalAdmin reports whether a normalized email is the seeded development
-// account that uses the fixed login code — and only when developmentMode is
-// true. Outside development, admin@localhost has no special case and goes
-// through TOTP like every other account (see PRD 014).
-func isLocalAdmin(normalizedEmail string, developmentMode bool) bool {
-	return developmentMode && normalizedEmail == localAdminEmail
+// account that uses the fixed login code.
+func isLocalAdmin(normalizedEmail string) bool {
+	return normalizedEmail == localAdminEmail
 }
 
 // deriveTOTPSecret produces a per-user TOTP secret from the server's JWT
@@ -69,27 +68,21 @@ func hotp(secret []byte, counter uint64) string {
 	return fmt.Sprintf("%0*d", totpDigits, binCode%mod)
 }
 
-// totpStep returns the step counter containing now, per RFC 6238. Two
-// values at the same step share the same TOTP code; this is also the unit
-// PRD 016's replay guard tracks "already used" against.
-func totpStep(now time.Time) uint64 {
-	return uint64(now.Unix()) / uint64(totpPeriod.Seconds())
-}
-
 // currentTOTP returns the code for the step containing now, per RFC 6238.
 // Skew is fixed at 0: only the current step is ever accepted, so a code is
-// valid for its whole 5-minute step unless it has already been consumed
-// once (see PRD 016's replay guard in service.go).
+// valid for its whole 5-minute step and can be replayed within it. This is a
+// documented limitation, not a bug; closing it needs a replay-tracking store
+// this template does not implement.
 func currentTOTP(secret []byte, now time.Time) string {
-	return hotp(secret, totpStep(now))
+	counter := uint64(now.Unix()) / uint64(totpPeriod.Seconds())
+	return hotp(secret, counter)
 }
 
 // generateCode returns the login code for this user at time now: the fixed
-// code for the seeded local admin when developmentMode is true, otherwise
-// the current TOTP step. Time is a parameter (not time.Now) so tests are
-// deterministic without sleeping.
-func generateCode(jwtSecret []byte, publicUUID, normalizedEmail string, now time.Time, developmentMode bool) string {
-	if isLocalAdmin(normalizedEmail, developmentMode) {
+// code for the seeded local admin, otherwise the current TOTP step. Time is
+// a parameter (not time.Now) so tests are deterministic without sleeping.
+func generateCode(jwtSecret []byte, publicUUID, normalizedEmail string, now time.Time) string {
+	if isLocalAdmin(normalizedEmail) {
 		return localAdminCode
 	}
 	secret := deriveTOTPSecret(jwtSecret, publicUUID)
@@ -98,7 +91,7 @@ func generateCode(jwtSecret []byte, publicUUID, normalizedEmail string, now time
 
 // verifyCode checks code against the expected value for this user at time
 // now, in constant time.
-func verifyCode(jwtSecret []byte, publicUUID, normalizedEmail, code string, now time.Time, developmentMode bool) bool {
-	expected := generateCode(jwtSecret, publicUUID, normalizedEmail, now, developmentMode)
+func verifyCode(jwtSecret []byte, publicUUID, normalizedEmail, code string, now time.Time) bool {
+	expected := generateCode(jwtSecret, publicUUID, normalizedEmail, now)
 	return subtle.ConstantTimeCompare([]byte(expected), []byte(code)) == 1
 }

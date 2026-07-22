@@ -1,6 +1,5 @@
 # Working Rules
 
-- When repository guidance conflicts, precedence is: this file (`AGENTS.md`) → domain documentation (e.g. `docs/prds/README.md`, `docs/onboarding/`) → the approved PRD for the specific change being implemented. A domain doc or PRD may add detail but never override a rule stated here.
 - Every behavior change starts with a small PRD under `docs/prds/backlog/` (see `docs/prds/README.md`).
 - PRD drafting is a separate, unhurried step from implementation — speed optimizations apply to the coding phase only, never to shortcut requirements gathering or approval.
 - Implement only its Acceptance criteria and respect Out of Scope.

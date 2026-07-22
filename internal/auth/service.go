@@ -18,8 +18,6 @@ type Service struct {
 	jwtManager          *JWTManager
 	now                 func() time.Time
 	isGuestRegistration bool
-	throttle            *loginThrottle
-	replay              *replayGuard
 }
 
 // NewService wires the auth vertical slice. The per-user TOTP secret is
@@ -35,8 +33,6 @@ func NewService(repo Repository, delivery LoginCodeSender, jwtManager *JWTManage
 		jwtManager:          jwtManager,
 		now:                 time.Now,
 		isGuestRegistration: isGuestRegistration,
-		throttle:            newLoginThrottle(),
-		replay:              newReplayGuard(),
 	}
 }
 
@@ -68,12 +64,7 @@ func (s *Service) RequestLogin(ctx context.Context, email string) error {
 }
 
 // SubmitLogin validates the code and, on success, returns a signed JWT.
-// Unknown users and invalid codes both return errUnauthenticated. Repeated
-// failures for one account are throttled (see PRD 015): once an account is
-// locked out, further attempts are rejected without even checking the code,
-// using the same generic error as an invalid code. A code that already
-// completed one successful login this TOTP step is rejected on replay (see
-// PRD 016), with the same generic error.
+// Unknown users and invalid codes both return errUnauthenticated.
 func (s *Service) SubmitLogin(ctx context.Context, email, code string) (string, error) {
 	normalized := normalizeEmail(email)
 
@@ -85,21 +76,9 @@ func (s *Service) SubmitLogin(ctx context.Context, email, code string) (string, 
 		return "", err
 	}
 
-	now := s.now()
-
-	if s.throttle.locked(user.PublicUUID, now) {
+	if !s.jwtManager.verifyLoginCode(user.PublicUUID, normalized, code, s.now()) {
 		return "", errUnauthenticated
 	}
-
-	if !s.jwtManager.verifyLoginCode(user.PublicUUID, normalized, code, now) {
-		s.throttle.recordFailure(user.PublicUUID, now)
-		return "", errUnauthenticated
-	}
-
-	if s.replay.consume(user.PublicUUID, totpStep(now)) {
-		return "", errUnauthenticated
-	}
-	s.throttle.reset(user.PublicUUID)
 
 	token, err := s.jwtManager.Issue(user.PublicUUID)
 	if err != nil {

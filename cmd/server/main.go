@@ -7,12 +7,7 @@ import (
 	"context"
 	"io/fs"
 	"log"
-	"net"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"connectrpc.com/connect"
 
@@ -24,13 +19,7 @@ import (
 	"project/internal/mail"
 	"project/internal/platform/config"
 	"project/internal/platform/database"
-	"project/internal/platform/observability"
-	platformserver "project/internal/platform/server"
 )
-
-// readyTimeout bounds how long GET /health/ready waits on the database
-// before reporting itself unreachable.
-const readyTimeout = 2 * time.Second
 
 func main() {
 	if err := run(); err != nil {
@@ -44,9 +33,7 @@ func run() error {
 		return err
 	}
 
-	logger := observability.NewLogger(os.Stdout)
 	ctx := context.Background()
-	logger.Info(ctx, "starting server", "config", cfg.SafeFields())
 
 	pool, err := database.Connect(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -67,7 +54,7 @@ func run() error {
 
 	queries := db.New(pool)
 
-	jwtManager, err := auth.NewJWTManager(cfg.JWTSecret, cfg.AppEnv == config.AppEnvDevelopment)
+	jwtManager, err := auth.NewJWTManager(cfg.JWTSecret)
 	if err != nil {
 		return err
 	}
@@ -97,13 +84,11 @@ func run() error {
 	publicProcedures := map[string]bool{
 		authv1connect.AuthServiceRequestLoginProcedure: true,
 		authv1connect.AuthServiceSubmitLoginProcedure:  true,
-		authv1connect.AuthServiceLogoutProcedure:       true,
 	}
 	withAuth := connect.WithInterceptors(auth.NewInterceptor(jwtManager, publicProcedures))
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /health", health.Handler())
-	mux.Handle("GET /health/ready", health.ReadyHandler(pool, readyTimeout))
 	registerAuth(mux, authHandler, withAuth)
 
 	if err := registerFrontend(mux); err != nil {
@@ -111,20 +96,6 @@ func run() error {
 	}
 
 	addr := ":" + cfg.Port
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
-
-	srv := newHTTPServer(addr, observability.RequestLogging(logger)(mux))
-
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-
-	logger.Info(ctx, "listening", "addr", addr)
-	if err := platformserver.Run(srv, ln, shutdownTimeout, stop); err != nil {
-		return err
-	}
-	logger.Info(ctx, "server stopped")
-	return nil
+	log.Printf("listening on %s", addr)
+	return http.ListenAndServe(addr, mux)
 }
