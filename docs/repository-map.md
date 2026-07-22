@@ -22,6 +22,7 @@ how these pieces connect at request time.
 - `buf.yaml` / `buf.gen.yaml` — protobuf lint/generation config for `make gen`.
 - `sqlc.yaml` — SQL-to-Go codegen config for `make gen`.
 - `.env.example` — template for local `.env` (`DATABASE_URL`, `JWT_SECRET`, optional `MAIL_URL`).
+- `Dockerfile` / `.dockerignore` — reproducible, vendor-neutral container image; see [`runbooks/container-deployment.md`](runbooks/container-deployment.md).
 - `.github/workflows/` — CI; runs the equivalent of `make check` on pull requests.
 - `.claude/skills/` — repository-specific agent skills (e.g. `new-feature`, the PRD-driven implementation workflow).
 
@@ -35,9 +36,10 @@ how these pieces connect at request time.
 
 - `internal/<domain>` (currently `auth`, `health`, `mail`) — handler/service/repository for one domain; never a second registry outside `cmd/server/register_<domain>.go`.
 - `internal/gen` — generated proto stubs and sqlc repository code. Never edit by hand; regenerate with `make gen`.
-- `internal/platform/config` — environment/config loading.
+- `internal/platform/config` — environment/config loading and startup validation.
 - `internal/platform/database` — connection pooling and migration runner.
-- `internal/platform/server` — SPA static-file handler used by `cmd/server/register_frontend.go` to serve the built frontend.
+- `internal/platform/server` — SPA static-file handler and the `Run` graceful-shutdown helper used by `cmd/server/main.go`.
+- `internal/platform/observability` — vendor-neutral `Logger` interface, request-correlation-ID middleware, structured access logs.
 - `internal/platform/doctor` — pure classification logic behind `make doctor`.
 - `internal/platform/doclint` — pure classification logic behind `make doc-lint`.
 

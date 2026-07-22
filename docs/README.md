@@ -30,6 +30,8 @@ docs/
   repository-map.md      # what lives where, one line each
   vertical-slice-example.md  # one real PRD traced through every layer
   report-template.md     # completion-report contract
+  threat-model.md        # trust boundaries, assets, accepted risks
+  environment-contract.md # every env var: required/optional, default, prod guidance
 ```
 
 ## Five-question retrieval
@@ -54,6 +56,8 @@ docs/
 - [`decisions/`](decisions/) — ADRs; start from [`decisions/README.md`](decisions/README.md).
 - [`vertical-slice-example.md`](vertical-slice-example.md) — one real PRD traced end to end.
 - [`report-template.md`](report-template.md) — the completion-report contract for every finished PRD.
+- [`threat-model.md`](threat-model.md) — trust boundaries, protected assets, and every currently-accepted security risk with a link to the PRD that would close it.
+- [`environment-contract.md`](environment-contract.md) — every environment variable, required/optional, default, and production guidance.
 
 ## Precedence
 

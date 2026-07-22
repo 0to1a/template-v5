@@ -33,9 +33,17 @@ Browser (SvelteKit SPA, web/src/routes/**)
   -> PostgreSQL
 ```
 
-`GET /health` (`internal/health`) is the one unauthenticated route and
-performs no database query — it reflects process liveness, not database
-health.
+`GET /health` and `GET /health/ready` (`internal/health`) are the two
+unauthenticated routes. `/health` (liveness) performs no database query and
+always answers 200 if the process is up. `/health/ready` (readiness) pings
+the database pool with a short timeout and answers non-2xx if it can't be
+reached — see [`environment-contract.md`](environment-contract.md) for how a
+deployment platform should use each. Every request, including these two,
+passes through a request-logging middleware
+(`internal/platform/observability`) that attaches a correlation ID
+(`X-Request-Id`, generated if the caller didn't send one) and writes one
+structured log line — never headers or bodies, so secrets can't leak into
+it.
 
 ## Domain registration
 
@@ -75,6 +83,14 @@ listen.
 build`) and embeds its output via `cmd/server/register_frontend.go`, then
 compiles a single `bin/server` binary that serves the API and the SPA from
 one process. There is no separate frontend server in production.
+
+The `http.Server` in `cmd/server/server.go` sets explicit read/write/idle
+timeouts — no connection is unbounded. On SIGINT/SIGTERM,
+`internal/platform/server.Run` stops accepting new connections and drains
+in-flight requests for a bounded deadline before force-closing; the database
+pool closes only after that drain completes. See
+[`runbooks/release.md`](runbooks/release.md) for how this fits into a
+deploy.
 
 ## Security posture baked into this lifecycle
 
