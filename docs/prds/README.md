@@ -23,6 +23,7 @@ docs/prds/developed/<id>-<slug>.md
 ```
 
 - ID: three digits, monotonic across **both** lifecycle folders, never reused. The next ID is the highest existing one + 1.
+  - Two PRDs drafted concurrently on separate branches can legitimately compute the same "next ID" — each branch only sees its own history. This is expected, not a process failure: `make doc-lint` reports it as a duplicate PRD ID when both land on the same base branch, and the fix is renumbering whichever PRD merges second, then re-deriving its `TC-<id>-n` names to match. This has happened before (Wave C and Wave D both independently claimed ID 010) and again in the ALV-16 benchmark (two parallel agent trials both independently claimed ID 020); in neither case did it reach `main` undetected.
 - Slug: lowercase kebab-case.
 - One PRD = one verifiable capability. Split big PRDs before implementing.
 - A PRD is not a design document, implementation plan, or file list.
