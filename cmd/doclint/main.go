@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"project/internal/platform/doclint"
 )
@@ -17,7 +18,7 @@ func main() {
 }
 
 func run() bool {
-	issues, err := doclint.Lint("docs")
+	issues, err := doclint.Lint("docs", ".", time.Now())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "doc-lint: %v\n", err)
 		return false
