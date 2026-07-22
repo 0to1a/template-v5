@@ -42,6 +42,7 @@ how these pieces connect at request time.
 - `internal/platform/observability` — vendor-neutral `Logger` interface, request-correlation-ID middleware, structured access logs.
 - `internal/platform/doctor` — pure classification logic behind `make doctor`.
 - `internal/platform/doclint` — pure classification logic behind `make doc-lint`.
+- `internal/platform/docs` — test-only package that asserts specific canonical `docs/` content stays true (e.g. PRD 020's provisioning/collision claims); not shipped in the server binary.
 
 ## `proto/` — Connect/protobuf contracts
 

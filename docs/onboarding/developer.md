@@ -23,6 +23,20 @@ tells you exactly what to fix and how.
   ```
 - An external PostgreSQL server you can already authenticate to. This project never creates, drops, or resets the database server itself (see [`AGENTS.md`](../../AGENTS.md)) — a database and role must already exist.
 
+  **If you don't have a role/database yet** (a genuinely fresh machine with
+  only PostgreSQL installed, no existing role for this project), create them
+  yourself once, manually, before continuing — this is the one manual step
+  the deterministic path assumes is already done:
+  ```bash
+  sudo -u postgres psql -c "CREATE ROLE template_v5 WITH LOGIN PASSWORD 'template_v5';"
+  sudo -u postgres psql -c "CREATE DATABASE template_v5 OWNER template_v5;"
+  ```
+  Then set `DATABASE_URL=postgres://template_v5:template_v5@localhost:5432/template_v5?sslmode=disable`
+  in `.env` (or your own role/database name, in the same shape as
+  `.env.example`). Nothing in `make bootstrap`, `make doctor`, or any other
+  target runs `CREATE ROLE`/`CREATE DATABASE` for you, on purpose (see
+  `AGENTS.md`'s "never create, drop, or reset PostgreSQL implicitly").
+
 ## 2. The deterministic path
 
 ```bash
