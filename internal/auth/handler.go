@@ -33,6 +33,9 @@ func (h *Handler) RequestLogin(
 	return connect.NewResponse(&authv1.RequestLoginResponse{}), nil
 }
 
+// SubmitLogin issues the session as an HttpOnly Set-Cookie header (see
+// cookie.go) rather than in the response body — the token never crosses
+// into JavaScript-readable territory (PRD 017).
 func (h *Handler) SubmitLogin(
 	ctx context.Context,
 	req *connect.Request[authv1.SubmitLoginRequest],
@@ -45,5 +48,20 @@ func (h *Handler) SubmitLogin(
 		log.Printf("auth: submit login failed: %v", err)
 		return nil, connect.NewError(connect.CodeInternal, errors.New("auth: login failed"))
 	}
-	return connect.NewResponse(&authv1.SubmitLoginResponse{AccessToken: token}), nil
+
+	resp := connect.NewResponse(&authv1.SubmitLoginResponse{})
+	setSessionCookies(resp.Header(), token, accessTokenTTL)
+	return resp, nil
+}
+
+// Logout clears the session cookie server-side. It is public (see the
+// allowlist in cmd/server/main.go): it needs no identity check, and it must
+// still succeed for a caller whose session already expired.
+func (h *Handler) Logout(
+	_ context.Context,
+	_ *connect.Request[authv1.LogoutRequest],
+) (*connect.Response[authv1.LogoutResponse], error) {
+	resp := connect.NewResponse(&authv1.LogoutResponse{})
+	clearSessionCookies(resp.Header())
+	return resp, nil
 }

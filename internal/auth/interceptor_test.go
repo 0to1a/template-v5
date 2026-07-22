@@ -53,7 +53,7 @@ func TestInterceptor_ValidTokenAttachesPrincipal(t *testing.T) {
 	})
 
 	req := connect.NewRequest(&authv1.RequestLoginRequest{})
-	req.Header().Set("Authorization", "Bearer "+token)
+	req.Header().Set("Cookie", sessionCookieName+"="+token)
 
 	if _, err := interceptor.WrapUnary(next)(context.Background(), req); err != nil {
 		t.Fatal(err)
@@ -73,9 +73,33 @@ func TestInterceptor_MalformedTokenRejected(t *testing.T) {
 	})
 
 	req := connect.NewRequest(&authv1.RequestLoginRequest{})
-	req.Header().Set("Authorization", "Bearer not-a-jwt")
+	req.Header().Set("Cookie", sessionCookieName+"=not-a-jwt")
 
 	if _, err := interceptor.WrapUnary(next)(context.Background(), req); err == nil {
 		t.Fatal("malformed token was accepted")
+	}
+}
+
+// TC-017-2 (interceptor side): no Authorization header is honored anymore —
+// the session lives only in the cookie.
+func TestInterceptor_AuthorizationHeaderIgnored(t *testing.T) {
+	m := newTestJWTManager(t, fixedTime)
+	interceptor := NewInterceptor(m, map[string]bool{})
+
+	token, err := m.Issue(testUUID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	next := connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+		t.Fatal("handler reached without a session cookie")
+		return nil, nil
+	})
+
+	req := connect.NewRequest(&authv1.RequestLoginRequest{})
+	req.Header().Set("Authorization", "Bearer "+token)
+
+	if _, err := interceptor.WrapUnary(next)(context.Background(), req); err == nil {
+		t.Fatal("a bare Authorization header was accepted without a session cookie")
 	}
 }

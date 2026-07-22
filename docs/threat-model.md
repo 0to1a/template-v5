@@ -27,8 +27,9 @@ Browser  <-- untrusted -->  Go server  <-- trusted network -->  PostgreSQL
 
 - **Browser → server**: the only boundary that carries attacker-controlled
   input. Every Connect procedure is protected by default
-  (`internal/auth/interceptor.go`); only the two login procedures are
-  explicitly public.
+  (`internal/auth/interceptor.go`); only `RequestLogin`, `SubmitLogin`, and
+  `Logout` are explicitly public (`Logout` needs no identity check to clear
+  a cookie).
 - **Server → PostgreSQL**: assumed trusted network (same host, private
   network, or TLS-terminated connection string). The server never creates,
   drops, or resets the database — see `AGENTS.md`.
@@ -43,7 +44,7 @@ Browser  <-- untrusted -->  Go server  <-- trusted network -->  PostgreSQL
 | `DATABASE_URL` | environment variable, process memory | May embed a database password; grants full read/write on user data. |
 | Login codes (OTP) | generated in-memory, emailed, never stored | A valid code plus a known email is equivalent to a password. |
 | User email addresses | `users` table | PII; also the login identifier. |
-| Bearer tokens | issued to the browser, stored in `localStorage` | Grants the holder full access as that user for the token's lifetime (24h). |
+| Session tokens | issued to the browser as an `HttpOnly` cookie (`internal/auth/cookie.go`) | Grants the holder full access as that user for the token's lifetime (24h). |
 
 ## Currently-accepted risks
 
@@ -53,10 +54,6 @@ needs owner approval first (see `AGENTS.md`, "Sensitive behavior... requires
 owner approval before implementation"). Each links to the backlog PRD that
 would close it.
 
-- **Bearer token in `localStorage`, not an `HttpOnly` cookie**
-  (`web/src/lib/auth.ts`): any XSS that runs in the app's origin can read
-  the token. Tracked by
-  [`prds/backlog/017-httponly-session-cookie-hardening.md`](prds/backlog/017-httponly-session-cookie-hardening.md).
 - **SMTP-only email delivery, no provider abstraction**
   (`internal/mail`): a single hardcoded transport with no failover,
   deliverability monitoring, or provider-side abuse controls. Tracked by
