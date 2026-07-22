@@ -299,6 +299,11 @@ func TestSubmitLogin_TC015_2(t *testing.T) {
 		t.Fatalf("correct code below threshold: %v", err)
 	}
 
+	// Advance past the TOTP step just consumed so the next correct-code
+	// login below is not rejected as a replay (see PRD 016) — this test
+	// exercises throttle reset, not replay.
+	service.now = func() time.Time { return fixedTime.Add(totpPeriod) }
+
 	// If the counter had not reset, these failures plus the ones above would
 	// exceed the threshold and the next correct code would be rejected.
 	for i := 0; i < loginFailureThreshold-1; i++ {
