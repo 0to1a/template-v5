@@ -1,6 +1,7 @@
 # Public commands (run `make help` for the list):
 #
 #   make bootstrap  install/download all dependencies — the ONLY target that installs
+#   make doctor     diagnose Go/Bun/PostgreSQL/config readiness — read-only, installs nothing
 #   make gen        regenerate code from proto and SQL (explicit, no watcher)
 #   make check      done-signal: codegen, lint, tests, both builds
 #   make run        build the frontend once, then run the single Go process
@@ -20,7 +21,7 @@
 -include .env
 export
 
-.PHONY: help bootstrap gen check run build _check-tools
+.PHONY: help bootstrap doctor gen check run build _check-tools
 
 # Scoped explicitly to our own Go code. A bare "./..." would also crawl
 # web/node_modules, which can contain vendored .go files shipped inside npm
@@ -58,6 +59,21 @@ bootstrap: _check-tools ## Install/download all dependencies (the only target th
 	@echo "==> installing web dependencies"
 	cd web && bun install --frozen-lockfile
 	@echo "==> bootstrap done"
+
+# Deliberately independent of _check-tools: that target aborts on the first
+# missing tool, but doctor's whole point is to report every problem at once
+# (Go, Bun, config, PostgreSQL) before a developer starts fixing things one
+# at a time. It never installs a tool, writes .env, or touches the database
+# — see cmd/doctor and internal/platform/doctor. Like every other target
+# here, `go run` follows this repo's normal GOTOOLCHAIN=auto behavior (see
+# go.mod's `go` directive), not a doctor-specific exception.
+doctor: ## Diagnose Go/Bun/PostgreSQL/config readiness (read-only, installs nothing)
+	@command -v go >/dev/null 2>&1 || { \
+		echo "✗ Go toolchain: go was not found in PATH"; \
+		echo "    → install Go $(GO_REQUIRED).x from https://go.dev/dl/"; \
+		exit 1; \
+	}
+	@go run ./cmd/doctor
 
 # buf and sqlc default to the go.mod-pinned tools, compiled on demand by the
 # Go toolchain. CI overrides these with prebuilt binaries of the same versions
