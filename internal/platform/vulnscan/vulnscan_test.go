@@ -8,7 +8,7 @@ import (
 
 var fixedNow = time.Date(2026, 7, 22, 0, 0, 0, 0, time.UTC)
 
-// TC-010-4: a finding with no exception entry fails.
+// TC-019-4: a finding with no exception entry fails.
 func TestEvaluate_TC010_4_NoExceptionFails(t *testing.T) {
 	findings := []Finding{{ID: "GO-2024-9999", Severity: SeverityHigh}}
 
@@ -19,7 +19,7 @@ func TestEvaluate_TC010_4_NoExceptionFails(t *testing.T) {
 	}
 }
 
-// TC-010-5: an unexpired exception suppresses a finding; an expired one
+// TC-019-5: an unexpired exception suppresses a finding; an expired one
 // does not.
 func TestEvaluate_TC010_5_ExceptionExpiry(t *testing.T) {
 	finding := Finding{ID: "GO-2024-9999", Severity: SeverityHigh}

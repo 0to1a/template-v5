@@ -7,7 +7,7 @@ import (
 	"testing/fstest"
 )
 
-// TC-010-8: NewSPAHandler requires index.html to exist in distFS.
+// TC-019-8: NewSPAHandler requires index.html to exist in distFS.
 func TestNewSPAHandler_MissingIndexHTML(t *testing.T) {
 	fsys := fstest.MapFS{}
 
@@ -16,7 +16,7 @@ func TestNewSPAHandler_MissingIndexHTML(t *testing.T) {
 	}
 }
 
-// TC-010-8: table-driven coverage of NewSPAHandler's routing branches —
+// TC-019-8: table-driven coverage of NewSPAHandler's routing branches —
 // existing file, SPA fallback for HTML navigation, and 404 otherwise.
 func TestSPAHandler(t *testing.T) {
 	fsys := fstest.MapFS{

@@ -12,7 +12,7 @@
 #   make run         build the frontend once, then run the single Go process
 #   make build       produce bin/server with the SPA embedded
 #
-# TC-010-6: doc-lint, vuln-scan, lint, and test are split out of check so a
+# TC-019-6: doc-lint, vuln-scan, lint, and test are split out of check so a
 # developer can run one targeted, fast check while iterating; check itself
 # still runs every one of them plus build, and stays the single
 # done-signal/CI gate.
@@ -87,7 +87,7 @@ doctor: ## Diagnose Go/Bun/PostgreSQL/config readiness (read-only, installs noth
 	@go run ./cmd/doctor
 
 # Read-only, like doctor: never edits a doc, never writes .env, never
-# touches the database. A step in `check`/CI (Fase 4 / PRD 010); PRD 008
+# touches the database. A step in `check`/CI (Fase 4 / PRD 019); PRD 008
 # deliberately left this unwired, which is why this comment moved here.
 doc-lint: ## Validate docs/ front matter, links, PRD ID/backlink/TC-trace (read-only)
 	@go run ./cmd/doclint

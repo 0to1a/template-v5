@@ -29,7 +29,7 @@ func setValidBaseEnv(t *testing.T) {
 	t.Setenv("IS_GUEST_REGISTRATION", "")
 }
 
-// TC-010-8: table-driven coverage of Load's validation and defaulting.
+// TC-019-8: table-driven coverage of Load's validation and defaulting.
 func TestLoad(t *testing.T) {
 	tests := []struct {
 		name                string

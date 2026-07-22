@@ -26,45 +26,45 @@ Make the failure modes the ALV-7 plan calls out for Fase 4 — broken docs, unre
 - CVSS-equivalent severity grading for Go findings: the Go vulnerability database does not publish CVSS scores, so every `govulncheck`-confirmed (called, not merely imported) finding is treated as at-threshold; only the JS/`bun audit` scan uses graded severity (`low`/`moderate`/`high`/`critical`).
 - Adding `golang.org/x/vuln` as anything other than a `go.mod` `tool` dependency (mirrors the existing `buf`/`sqlc` pattern) — no other new Go or JS dependency is introduced; the exceptions file uses this repo's existing hand-rolled key/value block parsing style, not a new YAML/TOML library.
 - Splitting the GitHub Actions `check` job into multiple jobs — the required-status-check name `check` stays a single job (see `.github/workflows/ci.yml`); only the `Makefile` targets are decomposed.
-- Rewriting or renumbering PRDs 001–009, or retroactively adding traceability/backlinks to them. The `problem_brief` backlink check only validates the field when a PRD declares one at all (mirrors `doclint`'s existing precedent of never retroactively failing pre-existing docs against a newer, stricter convention — see `requiredFrontMatterFields` in `internal/platform/doclint/doclint.go`); PRDs 001–007 predate the problem-brief gate and have no such field, so they are silently unaffected. Likewise, the TC-traceability check only applies to developed PRDs numbered 010 and above — PRDs 002 and 003 (`docs/prds/developed/`) predate this convention and are validated by their CI pipeline's own behavior rather than a grep-able test, not by new automated tests added retroactively here.
+- Rewriting or renumbering PRDs 001–009, or retroactively adding traceability/backlinks to them. The `problem_brief` backlink check only validates the field when a PRD declares one at all (mirrors `doclint`'s existing precedent of never retroactively failing pre-existing docs against a newer, stricter convention — see `requiredFrontMatterFields` in `internal/platform/doclint/doclint.go`); PRDs 001–007 predate the problem-brief gate and have no such field, so they are silently unaffected. Likewise, the TC-traceability check only applies to developed PRDs numbered 014 and above — PRDs 002 and 003 (`docs/prds/developed/`) predate this convention and are validated by their CI pipeline's own behavior rather than a grep-able test, not by new automated tests added retroactively here.
 
 ## Test Cases
-### TC-010-1: A PRD with a broken problem_brief backlink is reported
+### TC-019-1: A PRD with a broken problem_brief backlink is reported
 - Given a PRD file whose `problem_brief` links to a file that does not have `status: proceed`
 - When `doc-lint` runs
 - Then it reports that PRD file and the invalid backlink, and exits non-zero
 
-### TC-010-2: An expired waiver is reported
+### TC-019-2: An expired waiver is reported
 - Given a PRD file with `problem_brief: waiver` and a `waiver_expires` date in the past
 - When `doc-lint` runs
 - Then it reports that PRD file as having an expired waiver, and exits non-zero
 
-### TC-010-3: A developed PRD with an untraced test case is reported
+### TC-019-3: A developed PRD with an untraced test case is reported
 - Given a file under `docs/prds/developed/` containing `TC-example-1` with no matching `TC-example-1` string in any test file in the repository
 - When `doc-lint` runs
 - Then it reports the missing trace for `TC-example-1`, and exits non-zero
 
-### TC-010-4: A vulnerability at or above threshold without an exception fails the scan
+### TC-019-4: A vulnerability at or above threshold without an exception fails the scan
 - Given a scanner finding with an ID that has no entry in `security/vulnerability-exceptions.txt`
 - When the vulnerability scan's evaluation runs
 - Then that finding is reported as failing
 
-### TC-010-5: An unexpired exception suppresses a finding, an expired one does not
+### TC-019-5: An unexpired exception suppresses a finding, an expired one does not
 - Given a scanner finding whose ID has an exception entry, once with `expires` in the future and once with `expires` in the past
 - When the vulnerability scan's evaluation runs for each case
 - Then the future-dated exception suppresses the finding and the past-dated one does not
 
-### TC-010-6: Targeted make targets exist and `make check` composes them
+### TC-019-6: Targeted make targets exist and `make check` composes them
 - Given the `Makefile`
 - When `make doc-lint`, `make vuln-scan`, `make lint`, `make test`, and `make build` are each run individually
 - Then each completes independently, and `make check` runs all of them and exits non-zero if any step fails
 
-### TC-010-7: Smoke test proves boot, migration, health, and shutdown
+### TC-019-7: Smoke test proves boot, migration, health, and shutdown
 - Given a freshly built `bin/server` and a throwaway PostgreSQL container with no pre-existing schema
 - When the smoke test starts the server against that container, polls `/health`, then sends a stop signal
 - Then `/health` answers 200 only after migrations have applied, and the server process exits within the smoke test's bounded wait
 
-### TC-010-8: SPA handler and config table-driven tests
+### TC-019-8: SPA handler and config table-driven tests
 - Given `internal/platform/server.NewSPAHandler` and `internal/platform/config.Load` with a table of request/environment cases
 - When each case runs
 - Then the handler/loader's observed behavior (status code, served content, or returned error) matches the expected outcome for that case

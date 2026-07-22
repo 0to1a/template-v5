@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TC-010-7: boots ./bin/server against a throwaway PostgreSQL container this
+# TC-019-7: boots ./bin/server against a throwaway PostgreSQL container this
 # script starts and always tears down itself — never the developer's
 # configured DATABASE_URL — and proves boot, migration, health, and
 # shutdown all work on a clean environment. Run via `make smoke-test`

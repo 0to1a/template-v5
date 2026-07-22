@@ -155,9 +155,9 @@ func TestLint_NonFileLinksAreSkipped(t *testing.T) {
 	}
 }
 
-// TC-010-1: a problem_brief that links to a file without status: proceed
+// TC-019-1: a problem_brief that links to a file without status: proceed
 // is reported.
-func TestLint_TC010_1_ProblemBriefWithoutProceedStatus(t *testing.T) {
+func TestLint_TC019_1_ProblemBriefWithoutProceedStatus(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "product", "parked-brief.md"), "---\ntype: Product brief\ntitle: A brief\ndescription: A description\ntags: [x]\nstatus: park\n---\n")
 	writeFile(t, filepath.Join(root, "prds", "backlog", "020-foo.md"),
@@ -203,8 +203,8 @@ func TestLint_PRDWithoutProblemBriefFieldIsGrandfathered(t *testing.T) {
 	}
 }
 
-// TC-010-2: a waiver with waiver_expires in the past is reported.
-func TestLint_TC010_2_ExpiredWaiver(t *testing.T) {
+// TC-019-2: a waiver with waiver_expires in the past is reported.
+func TestLint_TC019_2_ExpiredWaiver(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "prds", "backlog", "020-foo.md"),
 		"---\ntype: Product requirement\ntitle: Foo\ndescription: A description\ntags: [x]\n"+
@@ -252,9 +252,9 @@ func TestLint_IncompleteWaiverReported(t *testing.T) {
 	}
 }
 
-// TC-010-3: a developed PRD (ID >= 010) with a TC id that appears nowhere
+// TC-019-3: a developed PRD (ID >= 014) with a TC id that appears nowhere
 // else in the repository is reported.
-func TestLint_TC010_3_UntracedTestCase(t *testing.T) {
+func TestLint_TC019_3_UntracedTestCase(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "docs", "prds", "developed", "020-foo.md"), validFrontMatter+"\n### TC-020-1: something\n")
 
@@ -267,7 +267,7 @@ func TestLint_TC010_3_UntracedTestCase(t *testing.T) {
 	}
 }
 
-// A TC id referenced by a developed PRD (ID >= 010) is not flagged once a
+// A TC id referenced by a developed PRD (ID >= 014) is not flagged once a
 // test file elsewhere in the repo (outside docs/) contains it.
 func TestLint_TracedTestCasePasses(t *testing.T) {
 	root := t.TempDir()

@@ -35,12 +35,14 @@ var requiredFrontMatterFields = []string{"type", "title", "description", "tags"}
 
 // traceabilityEnforcedFromID is the first PRD ID that must have every one
 // of its TC-<id>-n test cases traced to a test/script file in the
-// repository. PRDs 002 and 003 predate this convention and were validated
-// by their CI pipeline's own behavior rather than a grep-able test; like
-// requiredFrontMatterFields above, an already-developed PRD is never
-// retroactively failed against a newer, stricter check. Compares as a
-// three-digit zero-padded string, which sorts the same as numerically.
-const traceabilityEnforcedFromID = "010"
+// repository. PRDs 002-013 predate this convention: 002 and 003 were
+// validated by their CI pipeline's own behavior rather than a grep-able
+// test, and 009-013 (Wave C) shipped documentation- and manual-review-only
+// test cases before this check existed. Like requiredFrontMatterFields
+// above, an already-developed PRD is never retroactively failed against a
+// newer, stricter check. Compares as a three-digit zero-padded string,
+// which sorts the same as numerically.
+const traceabilityEnforcedFromID = "014"
 
 var (
 	linkPattern    = regexp.MustCompile(`\[[^\]]*\]\(([^)]+)\)`)
