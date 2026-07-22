@@ -2,6 +2,7 @@
 #
 #   make bootstrap  install/download all dependencies — the ONLY target that installs
 #   make doctor     diagnose Go/Bun/PostgreSQL/config readiness — read-only, installs nothing
+#   make doc-lint   validate docs/ front matter, internal links, PRD IDs — read-only
 #   make gen        regenerate code from proto and SQL (explicit, no watcher)
 #   make check      done-signal: codegen, lint, tests, both builds
 #   make run        build the frontend once, then run the single Go process
@@ -21,7 +22,7 @@
 -include .env
 export
 
-.PHONY: help bootstrap doctor gen check run build _check-tools
+.PHONY: help bootstrap doctor doc-lint gen check run build _check-tools
 
 # Scoped explicitly to our own Go code. A bare "./..." would also crawl
 # web/node_modules, which can contain vendored .go files shipped inside npm
@@ -74,6 +75,12 @@ doctor: ## Diagnose Go/Bun/PostgreSQL/config readiness (read-only, installs noth
 		exit 1; \
 	}
 	@go run ./cmd/doctor
+
+# Read-only, like doctor: never edits a doc, never writes .env, never
+# touches the database. Not wired into `check` or CI yet (PRD 008's Out of
+# Scope) — run it manually before sending a docs change for review.
+doc-lint: ## Validate docs/ front matter, internal links, and PRD ID uniqueness (read-only)
+	@go run ./cmd/doclint
 
 # buf and sqlc default to the go.mod-pinned tools, compiled on demand by the
 # Go toolchain. CI overrides these with prebuilt binaries of the same versions
