@@ -28,7 +28,7 @@ implement" — this PRD is that follow-up.
   for one 5-minute step anyway).
 - Whether the local admin's fixed code (`123456`) is exempt from replay
   tracking, or whether this PRD ships after
-  [`014-production-guardrail-disable-demo-login-credential.md`](014-production-guardrail-disable-demo-login-credential.md)
+  [`014-production-guardrail-disable-demo-login-credential.md`](../developed/014-production-guardrail-disable-demo-login-credential.md)
   makes that moot outside development.
 
 ## Purpose

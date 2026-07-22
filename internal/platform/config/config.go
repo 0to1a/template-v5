@@ -10,6 +10,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Environment discriminator values for AppEnv. Anything else is a startup
+// error; an unset value defaults to AppEnvProduction so the template fails
+// closed rather than silently running in a development posture.
+const (
+	AppEnvDevelopment = "development"
+	AppEnvProduction  = "production"
+)
+
 // Config holds all runtime configuration for the server.
 type Config struct {
 	Port                string
@@ -17,6 +25,7 @@ type Config struct {
 	JWTSecret           string
 	MailURL             string
 	IsGuestRegistration bool
+	AppEnv              string
 }
 
 // SafeFields returns the subset of Config that is safe to log at startup:
@@ -28,6 +37,7 @@ func (c *Config) SafeFields() map[string]any {
 		"port":                  c.Port,
 		"mail_delivery_enabled": c.MailURL != "",
 		"is_guest_registration": c.IsGuestRegistration,
+		"app_env":               c.AppEnv,
 	}
 }
 
@@ -70,13 +80,35 @@ func Load() (*Config, error) {
 	// creates an account (today's behavior, see internal/auth.Service).
 	isGuestRegistration := os.Getenv("IS_GUEST_REGISTRATION") == "1"
 
+	// Fails closed: an unset APP_ENV is production, not development, so a
+	// deployment that forgets to set it never gets development-only
+	// behavior (see auth.otp.go's static admin@localhost login code).
+	appEnv := os.Getenv("APP_ENV")
+	if appEnv == "" {
+		appEnv = AppEnvProduction
+	}
+	if err := validateAppEnv(appEnv); err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		Port:                port,
 		DatabaseURL:         databaseURL,
 		JWTSecret:           jwtSecret,
 		MailURL:             mailURL,
 		IsGuestRegistration: isGuestRegistration,
+		AppEnv:              appEnv,
 	}, nil
+}
+
+// validateAppEnv rejects any value other than the two recognized
+// environments. APP_ENV is not a secret, so its value is safe to include in
+// the error.
+func validateAppEnv(appEnv string) error {
+	if appEnv != AppEnvDevelopment && appEnv != AppEnvProduction {
+		return fmt.Errorf("config: APP_ENV must be %q or %q, got %q", AppEnvDevelopment, AppEnvProduction, appEnv)
+	}
+	return nil
 }
 
 // validatePort rejects anything that is not a valid TCP port number. PORT is

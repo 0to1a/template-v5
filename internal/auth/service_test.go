@@ -50,7 +50,15 @@ func newTestService(t *testing.T, now time.Time) (*Service, *recordingDelivery) 
 
 func newTestServiceWithGuestRegistration(t *testing.T, now time.Time, isGuestRegistration bool) (*Service, *recordingDelivery) {
 	t.Helper()
-	jwtManager, err := NewJWTManager(jwtTestSecret)
+	return newTestServiceWithOptions(t, now, isGuestRegistration, true)
+}
+
+// newTestServiceWithOptions is the one place every test service is built, so
+// developmentMode (see PRD 014) has a single, explicit knob rather than an
+// implicit default buried in NewJWTManager.
+func newTestServiceWithOptions(t *testing.T, now time.Time, isGuestRegistration, developmentMode bool) (*Service, *recordingDelivery) {
+	t.Helper()
+	jwtManager, err := NewJWTManager(jwtTestSecret, developmentMode)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,6 +114,36 @@ func TestSubmitLogin_TC001_3(t *testing.T) {
 	}
 }
 
+// TC-014-1: outside development mode (the production default), the seeded
+// admin@localhost account gets no special case — the fixed code is rejected
+// exactly like any other invalid code for that account.
+func TestSubmitLogin_TC014_1(t *testing.T) {
+	service, _ := newTestServiceWithOptions(t, fixedTime, false, false)
+	ctx := context.Background()
+
+	token, err := service.SubmitLogin(ctx, "admin@localhost", "123456")
+	if err != errUnauthenticated {
+		t.Fatalf("fixed code outside development mode: err = %v, want errUnauthenticated", err)
+	}
+	if token != "" {
+		t.Fatal("fixed code outside development mode still produced a token")
+	}
+}
+
+// TC-014-2: explicit development mode preserves today's behavior — the
+// fixed code still logs the seeded admin in.
+func TestSubmitLogin_TC014_2(t *testing.T) {
+	service, _ := newTestServiceWithOptions(t, fixedTime, false, true)
+
+	token, err := service.SubmitLogin(context.Background(), "admin@localhost", "123456")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.jwtManager.Parse(token); err != nil {
+		t.Fatalf("issued token failed validation: %v", err)
+	}
+}
+
 // TC-001-4: a wrong code returns the generic unauthenticated error and no
 // token; an unknown user gets the exact same error.
 func TestSubmitLogin_TC001_4(t *testing.T) {
@@ -143,7 +181,7 @@ func TestSubmitLogin_TOTPUser(t *testing.T) {
 		t.Fatalf("current TOTP rejected: %v", err)
 	}
 
-	stale := generateCode([]byte(jwtTestSecret), testUUID, "user@example.com", fixedTime.Add(-totpPeriod))
+	stale := generateCode([]byte(jwtTestSecret), testUUID, "user@example.com", fixedTime.Add(-totpPeriod), true)
 	if _, err := service.SubmitLogin(ctx, "user@example.com", stale); err != errUnauthenticated {
 		t.Fatalf("previous-step TOTP: err = %v, want errUnauthenticated", err)
 	}

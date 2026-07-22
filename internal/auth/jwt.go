@@ -37,27 +37,30 @@ func PrincipalFromContext(ctx context.Context) (Principal, bool) {
 // NewJWTManager; the zero value is not usable. Time flows through the
 // injected clock so expiry behavior is testable without sleeping.
 type JWTManager struct {
-	secret []byte
-	now    func() time.Time
+	secret          []byte
+	now             func() time.Time
+	developmentMode bool
 }
 
-// NewJWTManager requires a secret of at least 32 bytes.
-func NewJWTManager(secret string) (*JWTManager, error) {
+// NewJWTManager requires a secret of at least 32 bytes. developmentMode
+// gates the seeded admin@localhost static login code (see PRD 014): it
+// must be true only for config.AppEnvDevelopment, never in production.
+func NewJWTManager(secret string, developmentMode bool) (*JWTManager, error) {
 	if len(secret) < 32 {
 		return nil, fmt.Errorf("auth: JWT secret must be at least 32 bytes")
 	}
-	return &JWTManager{secret: []byte(secret), now: time.Now}, nil
+	return &JWTManager{secret: []byte(secret), now: time.Now, developmentMode: developmentMode}, nil
 }
 
 // generateLoginCode derives a login code with the same private key material
 // used for JWT signing without exposing that material outside JWTManager.
 func (m *JWTManager) generateLoginCode(publicUUID, normalizedEmail string, now time.Time) string {
-	return generateCode(m.secret, publicUUID, normalizedEmail, now)
+	return generateCode(m.secret, publicUUID, normalizedEmail, now, m.developmentMode)
 }
 
 // verifyLoginCode verifies a login code without exposing the signing secret.
 func (m *JWTManager) verifyLoginCode(publicUUID, normalizedEmail, code string, now time.Time) bool {
-	return verifyCode(m.secret, publicUUID, normalizedEmail, code, now)
+	return verifyCode(m.secret, publicUUID, normalizedEmail, code, now, m.developmentMode)
 }
 
 // Issue creates a bearer token whose subject is the user's public identity.

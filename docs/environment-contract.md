@@ -24,20 +24,7 @@ aborts before the server binds a port — see
 | `JWT_SECRET` | Yes | none | At least 32 random bytes, generated per environment, never reused between environments, never committed. Rotating it invalidates every issued token and every user's derived TOTP secret. |
 | `MAIL_URL` | No | unset (login codes are discarded, not sent) | An `smtp://` URL. Leaving this unset in production means no user can ever receive a login code — verify it is set before relying on login in a real deployment. |
 | `IS_GUEST_REGISTRATION` | No | `0` (disabled) | Set to `1` only if the product intentionally auto-creates an account for any email that requests a login code. Treat enabling this in production as a product decision, not a default. |
-
-## What this template does not yet have
-
-There is currently no environment/mode discriminator (e.g. "development" vs
-"production") in code — `config.Load` behaves identically regardless of
-where it runs. A guardrail that fails closed on a demo/development
-configuration reaching production (starting with the seeded
-`admin@localhost` static login code) is planned but requires owner approval
-before implementation, since it changes `internal/auth` behavior — see
-[`prds/backlog/014-production-guardrail-disable-demo-login-credential.md`](prds/backlog/014-production-guardrail-disable-demo-login-credential.md)
-and [`threat-model.md`](threat-model.md). Until that PRD is approved and
-implemented, an operator deploying this template to a real environment must
-manually ensure the `admin@localhost` seed row (`db/migrations/00001_users.sql`)
-is removed or otherwise made unreachable.
+| `APP_ENV` | No | `production` (fail closed) | `development` or `production` — any other value aborts startup. `development` is the only setting where the seeded `admin@localhost` static login code (`123456`) works; leave this unset (or explicitly `production`) in every real deployment. See [`prds/developed/014-production-guardrail-disable-demo-login-credential.md`](prds/developed/014-production-guardrail-disable-demo-login-credential.md). |
 
 ## Health endpoints
 
