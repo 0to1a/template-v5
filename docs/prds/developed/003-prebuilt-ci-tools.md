@@ -1,3 +1,10 @@
+---
+type: Product requirement
+title: Prebuilt CI Code Generation Tools
+description: Faster CI validation using version-matched prebuilt Buf and sqlc binaries.
+tags: [ci, code-generation, tooling]
+---
+
 # Prebuilt CI Code Generation Tools
 
 ## Purpose

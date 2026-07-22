@@ -1,3 +1,10 @@
+---
+type: Product requirement
+title: Initial Email OTP Login
+description: Email OTP authentication for active registered users, including the local development account.
+tags: [auth, otp, login]
+---
+
 # Initial Email OTP Login
 
 ## Purpose

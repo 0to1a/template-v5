@@ -1,3 +1,10 @@
+---
+type: Product requirement
+title: Login Code Email Delivery
+description: SMTP delivery of HTML login-code email while preserving non-enumerating authentication behavior.
+tags: [auth, email, smtp]
+---
+
 # Login code email delivery
 
 ## Purpose

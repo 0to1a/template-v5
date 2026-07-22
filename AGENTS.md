@@ -1,6 +1,6 @@
 # Working Rules
 
-- Every behavior change starts with a small PRD under `docs/prds/` (see `docs/prds/README.md`).
+- Every behavior change starts with a small PRD under `docs/prds/backlog/` (see `docs/prds/README.md`).
 - PRD drafting is a separate, unhurried step from implementation — speed optimizations apply to the coding phase only, never to shortcut requirements gathering or approval.
 - Implement only its Acceptance criteria and respect Out of Scope.
 - Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval before implementation.
@@ -11,7 +11,6 @@
 - Never edit `internal/gen` or `web/src/lib/gen` manually; regenerate with `make gen`.
 - Frontend requests use the generated Connect client through `web/src/lib/client.ts`; the token only moves through `web/src/lib/auth.ts`.
 - Keep Svelte components HTML-first and use Svelte 5 runes.
-- Every SvelteKit route needs a matching fixture under `web/visual/fixtures/` (`make visual` fails otherwise); after UI-affecting changes, run `make visual` and include the `docs/ui-snapshots/` diff in the PR (see `docs/prds/006-visual-snapshots.md`).
 - Never log OTPs, JWTs, database URLs, or secrets.
 - Never create, drop, or reset PostgreSQL implicitly.
 - Do not add dependencies or broad refactors unless the PRD requires and approves them.

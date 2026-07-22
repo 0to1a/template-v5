@@ -1,3 +1,10 @@
+---
+type: Product requirement
+title: Clean Checkout CI Validation
+description: Reliable full validation from a clean checkout before generated frontend build artifacts exist.
+tags: [ci, build, validation]
+---
+
 # Clean Checkout CI Validation
 
 ## Purpose

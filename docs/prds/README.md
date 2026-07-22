@@ -1,20 +1,34 @@
 # PRDs — the unit of work
 
-Every behavior change starts as a file here:
+Every behavior change starts as a backlog PRD:
 
 ```text
-docs/prds/<id>-<slug>.md      e.g. docs/prds/002-logout.md
+docs/prds/backlog/<id>-<slug>.md      e.g. docs/prds/backlog/007-logout.md
 ```
 
-- ID: three digits, monotonic, never reused. The next ID is the highest existing one + 1.
+After the acceptance criteria are implemented and validated, move the same file to:
+
+```text
+docs/prds/developed/<id>-<slug>.md
+```
+
+- ID: three digits, monotonic across **both** lifecycle folders, never reused. The next ID is the highest existing one + 1.
 - Slug: lowercase kebab-case.
 - One PRD = one verifiable capability. Split big PRDs before implementing.
 - A PRD is not a design document, implementation plan, or file list.
-- Test-case IDs reuse the PRD ID: `TC-002-1`, `TC-002-2`, …
+- Test-case IDs reuse the PRD ID: `TC-007-1`, `TC-007-2`, …
+- Folder location is the lifecycle signal: `backlog/` means not yet delivered; `developed/` means implemented and validated.
 
 ## Required format
 
 ```markdown
+---
+type: Product requirement
+title: Short descriptive title
+description: One-sentence summary of the capability and user value.
+tags: [domain, capability]
+---
+
 # Title
 
 ## Purpose
@@ -40,10 +54,11 @@ docs/prds/<id>-<slug>.md      e.g. docs/prds/002-logout.md
 - Then
 ```
 
-Do not add implementation checklists, file lists, or extra required metadata.
+The front matter follows the source-grounded, navigable style used by [OpenWiki](https://github.com/langchain-ai/openwiki). Keep it short: it improves discovery, but does not replace the behavioral sections below it.
 
 ## Quality gate — a PRD is ready when
 
+- front matter has a concrete title, a one-sentence description, and useful domain/capability tags;
 - Purpose is exactly one sentence naming the behavior and its user;
 - Acceptance has 2–5 criteria, each objectively verifiable;
 - Out of Scope has 1–3 entries;
@@ -57,16 +72,19 @@ If the request is ambiguous, stop after drafting the PRD and ask. Never invent b
 ## Workflow
 
 1. **Understand** — read `AGENTS.md`, this file, `make help`, the nearest sibling domain/page, and the PRD (if it exists). Not the whole repo.
-2. **Draft PRD** — next ID, short slug, required format; surface assumptions and questions. Small, clear changes may proceed right after the PRD is written. Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval first — and approval is per-session: a PRD file existing does not prove it was approved.
+2. **Draft PRD** — choose the next ID across `backlog/` and `developed/`, create it under `backlog/`, use the required format, and surface assumptions/questions. Small, clear changes may proceed right after the PRD is written. Sensitive behavior (auth, authorization, money, deletion, destructive migration) requires owner approval first — and approval is per-session: a PRD file existing does not prove it was approved.
 3. **Map one vertical slice** — the smallest change that satisfies the PRD: migration/query (if needed) → proto → handler/service/repository (as needed) → `make gen` → Svelte page/component (if needed) → tests from the Test Cases. Skip layers the feature doesn't need.
 4. **Implement** — translate Test Cases into automated tests early; put the `TC-<id>-n` ID in the test name or comment; stay inside Acceptance and Out of Scope.
-5. **Validate** — `make check`. If it fails, the work is not done.
-6. **Report** — PRD path, acceptance met, tests added (with TC IDs), what was deliberately not done, real risks/follow-ups.
+5. **Validate** — run targeted checks while iterating, then `make check` as the final gate. If it fails, the work is not done.
+6. **Promote** — only after implementation and validation succeed, `git mv` the PRD from `backlog/` to `developed/` in the same change. Do not copy it or renumber it.
+7. **Report** — PRD path, acceptance met, tests added (with TC IDs), what was deliberately not done, and real risks/follow-ups.
 
 ## Lifecycle
 
-- An implemented PRD is never silently edited to match the code; requirement changes are an explicit owner revision or a new PRD.
-- Typo/non-behavior fixes need no PRD; behavior-changing bugfixes need a small one.
+- A PRD begins in `backlog/`; moving it to `developed/` asserts that its Acceptance and Test Cases have been implemented and validated.
+- A developed PRD is never silently edited to match the code; requirement changes are an explicit owner revision or a new backlog PRD.
+- If code later regresses, fix the regression against the developed PRD; do not move historical requirements back to backlog.
+- Typo/non-behavior fixes need no PRD; behavior-changing bugfixes need a small backlog PRD.
 - If acceptance turns out wrong mid-implementation, stop and ask for a PRD revision.
 
 Traceability is plain text search — `rg 'TC-001'` must find the tests. No registry.

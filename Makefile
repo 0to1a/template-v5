@@ -20,7 +20,7 @@
 -include .env
 export
 
-.PHONY: help bootstrap gen check run build visual _check-tools
+.PHONY: help bootstrap gen check run build _check-tools
 
 # Scoped explicitly to our own Go code. A bare "./..." would also crawl
 # web/node_modules, which can contain vendored .go files shipped inside npm
@@ -57,8 +57,6 @@ bootstrap: _check-tools ## Install/download all dependencies (the only target th
 	go mod download
 	@echo "==> installing web dependencies"
 	cd web && bun install --frozen-lockfile
-	@echo "==> installing Playwright browser (used by make visual)"
-	cd web && bunx playwright install chromium
 	@echo "==> bootstrap done"
 
 # buf and sqlc default to the go.mod-pinned tools, compiled on demand by the
@@ -116,7 +114,3 @@ build: _check-tools gen ## Produce the single production artifact: bin/server
 	@echo "==> building bin/server"
 	mkdir -p bin
 	go build -o bin/server ./cmd/server
-
-visual: _check-tools gen ## Render every page from fixtures into git-tracked docs/ui-snapshots/
-	cd web && bun run visual
-	@touch web/dist/.gitkeep

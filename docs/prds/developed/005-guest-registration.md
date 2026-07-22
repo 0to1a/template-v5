@@ -1,3 +1,10 @@
+---
+type: Product requirement
+title: Guest Self-Registration
+description: Operator-controlled creation of active accounts for unrecognized emails during login.
+tags: [auth, registration, configuration]
+---
+
 # Guest self-registration on login request
 
 ## Purpose

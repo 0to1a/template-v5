@@ -3,7 +3,7 @@
 An AI-first full-stack template with a **Go 1.26, Connect RPC, and PostgreSQL**
 backend; a **Svelte 5 and SvelteKit SPA** frontend; and a single production
 binary. Development follows a **PRD-driven workflow**: every behavior change
-starts with a small PRD in [`docs/prds/`](docs/prds/README.md), and repository
+starts with a small PRD in [`docs/prds/backlog/`](docs/prds/README.md), and repository
 working rules are defined in [`AGENTS.md`](AGENTS.md).
 
 ## Setup
