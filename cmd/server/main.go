@@ -41,6 +41,13 @@ func run() error {
 	}
 	defer pool.Close()
 
+	// A managed Postgres instance (Railway included) can still be starting
+	// up right after a cold start. Wait for it instead of letting the first
+	// migration query fail startup outright.
+	if err := database.WaitReady(ctx, pool); err != nil {
+		return err
+	}
+
 	// Migrations are embedded and applied at startup, up-only. A migration
 	// failure aborts startup loudly instead of running against an unknown
 	// schema.
